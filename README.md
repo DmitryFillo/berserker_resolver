@@ -1,4 +1,4 @@
-berserker_resolver
+Berserker Resolver
 ==================
 
 Berserker Resolver is fast mass dns resolver which can bypass loadbalancers.

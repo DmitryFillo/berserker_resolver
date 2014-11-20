@@ -1,4 +1,4 @@
 code comments
-readme
 tests
 resolve func type check
+fix WwwMixin to check domains (if www prefix appears)

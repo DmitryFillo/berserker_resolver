@@ -23,7 +23,7 @@ class BaseQuery(object):
 
 class Query(BaseQuery):
     tries = 2
-    nameservers = ['8.8.8.8', '127.0.0.1',]
+    nameservers = ['8.8.8.8', '4.2.2.1',]
 
     def __init__(self, **kwargs):
         set_kwargs(kwargs, ['tries', 'nameservers'])

@@ -17,7 +17,7 @@ class BaseConcurrence(object):
     threads = 8
 
     def __init__(self, **kwargs):
-        set_kwargs(self, kwargs, ['threads'])
+        kwargs = set_kwargs(self, kwargs, ['threads'])
         super(BaseConcurrence, self).__init__(**kwargs)
 
     def chunk_domains(self, domains):

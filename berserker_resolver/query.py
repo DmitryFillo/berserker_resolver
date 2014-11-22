@@ -8,7 +8,7 @@ class BaseQuery(object):
     resolver = Resolver()
 
     def __init__(self, **kwargs):
-        set_kwargs(self, kwargs, ['lifetime'])
+        kwargs = set_kwargs(self, kwargs, ['lifetime'])
         self.resolver.lifetime = self.lifetime
         super(BaseQuery, self).__init__(**kwargs)
 
@@ -26,7 +26,7 @@ class Query(BaseQuery):
     nameservers = ['8.8.8.8', '4.2.2.1',]
 
     def __init__(self, **kwargs):
-        set_kwargs(kwargs, ['tries', 'nameservers'])
+        kwargs = set_kwargs(self, kwargs, ['tries', 'nameservers'])
         super(Query, self).__init__(**kwargs)
 
     def query(self, domain):

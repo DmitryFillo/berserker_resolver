@@ -3,7 +3,6 @@
 from berserker_resolver.query import Query
 from berserker_resolver.concurrence import ThreadConcurrence
 from berserker_resolver.mixins import WwwMixin
-from berserker_resolver.base import MroFix
 
 class BaseResolver(object):
     def __init__(self, **kwargs):
@@ -14,7 +13,7 @@ class BaseResolver(object):
         resolved = resolver(domains)
         return resolved
 
-class ThreadResolver(WwwMixin, BaseResolver, Query, ThreadConcurrence, MroFix):
+class ThreadResolver(WwwMixin, BaseResolver, Query, ThreadConcurrence):
     def __init__(self, **kwargs):
         super(ThreadResolver, self).__init__(**kwargs)
 

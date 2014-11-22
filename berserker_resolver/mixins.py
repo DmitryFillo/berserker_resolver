@@ -11,7 +11,7 @@ class WwwMixin(object):
     www_resolve_combine = False
 
     def __init__(self, **kwargs):
-        set_kwargs(self, kwargs, ['www_resolve', 'www_resolve_combine'])
+        kwargs = set_kwargs(self, kwargs, ['www_resolve', 'www_resolve_combine'])
         super(WwwMixin, self).__init__(**kwargs)
 
     def www_add(self, domains):

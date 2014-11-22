@@ -18,7 +18,4 @@ def set_kwargs(obj, kwargs, keywords=[]):
             setattr(obj, i, kwargs.pop(i))
         except KeyError:
             pass
-
-class MroFix(object):
-    def __init__(self, **kwargs):
-        pass
+    return kwargs

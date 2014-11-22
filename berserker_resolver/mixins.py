@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from berserker_resolver.base import set_kwargs
+from berserker_resolver.base import set_kwargs, fold
 from functools import reduce
 from collections import defaultdict
 from re import compile as re_compile
 from re import I as re_I
 
 class WwwMixin(object):
+    '''
+    Adds possibility to add to the list domains with www prefix and
+    combine resolved www-prefix-domains with theirs no-www versions.
+    '''
     www_resolve = False
     www_resolve_combine = False
 
@@ -15,14 +19,16 @@ class WwwMixin(object):
         super(WwwMixin, self).__init__(**kwargs)
 
     def www_add(self, domains):
-        domains += ['www.'+i for i in domains]
+        r = re_compile(r'^(www\.){1}(?:.+)', re_I)
+        for i in domains:
+            if not r.match(i):
+                domains.append('www.'+i)
         return domains
 
     def www_combine(self, resolved):
-        r = re_compile(r'^(?:www\.)?(.*)', re_I)
+        r = re_compile(r'^(?:www\.)?(.+)', re_I)
         resolved = [(r.match(x).group(1), y) for x, y in resolved]
-        union = lambda x, y: (x[0],x[0].__setitem__(y[0],x[0][y[0]].union(y[1])))
-        return list(reduce(union, resolved, (defaultdict(set),))[0].items())
+        return fold(resolved)
 
     def resolve(self, domains):
         resolved = None

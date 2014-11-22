@@ -1,4 +1,3 @@
-code comments
 tests
-resolve func type check
-fix WwwMixin to check domains (if www prefix appears)
+rewrite readme and setup for new version
+finish examples

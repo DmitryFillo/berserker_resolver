@@ -13,14 +13,20 @@ elif _version == 2:
 
 from math import ceil
 
-class BaseConcurrence(object):
+class ConcurrenceBase(object):
+    '''
+    Base class for concurrence features.
+    '''
     threads = 8
 
     def __init__(self, **kwargs):
         kwargs = set_kwargs(self, kwargs, ['threads'])
-        super(BaseConcurrence, self).__init__(**kwargs)
+        super(ConcurrenceBase, self).__init__(**kwargs)
 
     def chunk_domains(self, domains):
+        '''
+        Chunks domains list to small lists for each thread.
+        '''
         domains_one_thread = int(ceil(float(len(domains))/self.threads))
         return self._chunk_list(domains, domains_one_thread)
 
@@ -28,13 +34,13 @@ class BaseConcurrence(object):
         for i in xrange_compat(0, len(l), n):
             yield l[i:i+n]
 
-class ThreadConcurrence(BaseConcurrence):
+class ThreadConcurrence(ConcurrenceBase):
     queue = Queue()
 
     def __init__(self, **kwargs):
         super(ThreadConcurrence, self).__init__(**kwargs)
 
-    def thread_resolver(self, domains):
+    def thread_resolve(self, domains):
         chunks = self.chunk_domains(domains)
         threads = []
         for i in xrange_compat(self.threads):
@@ -56,7 +62,7 @@ class ThreadConcurrence(BaseConcurrence):
 
     def __thread(self, domains):
         for d in domains:
-            self.queue.put((d, self.query(d)))
+            self.queue.put(self.query(d))
 
     def query(self, domain):
-        return NotImplementedError('query method is function for query one domain, implement it')
+        return NotImplementedError('Function for query one domain, implement it.')

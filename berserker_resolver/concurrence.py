@@ -17,7 +17,7 @@ class ConcurrenceBase(object):
     '''
     Base class for concurrence features.
     '''
-    threads = 8
+    threads = 1024
 
     def __init__(self, **kwargs):
         kwargs = set_kwargs(self, kwargs, ['threads'])

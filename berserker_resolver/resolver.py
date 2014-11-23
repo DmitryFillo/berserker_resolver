@@ -7,7 +7,7 @@ from berserker_resolver.mixins import WwwMixin
 
 class SimpleResolver(object):
     tries = 2
-    lifetime = 2
+    lifetime = 1
     nameservers = ['8.8.8.8', '8.8.4.4',]
     resolver_backend = Resolver()
 
@@ -71,7 +71,7 @@ class SimpleResolver(object):
 
         to_resolve = self.attach_tries_and_nameservers(domains)
         resolved = self.resolve_middleware(to_resolve)
-        resolved = fold([(i['domain'], i['result']) for i in resolved])
+        resolved = fold((i['domain'], i['result']) for i in resolved)
         return resolved
 
 class ThreadResolver(WwwMixin, SimpleResolver, ThreadConcurrence):

@@ -27,7 +27,7 @@ class WwwMixin(object):
 
     def www_combine(self, resolved):
         r = re_compile(r'^(?:www\.)?(.+)', re_I)
-        resolved = [(r.match(x).group(1), y) for x, y in resolved]
+        resolved = ((r.match(x).group(1), y) for x, y in resolved)
         return fold(resolved)
 
     def resolve(self, domains):

@@ -34,5 +34,5 @@ def fold(l):
     result = [('xxx', {1,2,3,4}), ('yyy', {1,2,3})]
     '''
     union = lambda x, y: (x[0], x[0].__setitem__(y[0], x[0][y[0]].union(y[1])))
-    result = list(reduce(union, l, (defaultdict(set),))[0].items())
+    result = reduce(union, l, (defaultdict(set),))[0].items()
     return result

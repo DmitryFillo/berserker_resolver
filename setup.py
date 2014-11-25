@@ -11,7 +11,7 @@ if sys.version_info.major == 3:
 
 setup(
     name = 'berserker_resolver',
-    version = '0.0.3',
+    version = '1.0.3',
     author = 'Dmitry Fillo',
     author_email = 'fillo@fillo.me',
     description = ('Berserker Resolver is fast mass dns resolver which can bypass loadbalancers'),

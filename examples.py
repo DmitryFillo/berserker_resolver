@@ -5,9 +5,9 @@ print('make coffee ... :)')
 '''
 Python 2/3 compat
 '''
-from berserker_resolver.base import get_version
+from sys import version_info
 
-_version = get_version()
+_version = version_info.major
 
 if _version == 3:
     from urllib.request import urlopen

@@ -1,18 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from sys import version_info as vi
 from functools import reduce
 from collections import defaultdict
+from berserker_resolver.compat import get_version
 
-def get_version():
-    return vi.major
-
-def xrange_compat(*args, **kwargs):
-    v = get_version()
-    if v == 3:
-        return range(*args, **kwargs)
-    elif v == 2:
-        return xrange(*args, **kwargs)
+_version = get_version()
 
 def set_kwargs(obj, kwargs, keywords=[]):
     '''

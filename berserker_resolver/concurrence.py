@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from berserker_resolver.base import set_kwargs, get_version, xrange_compat
+from berserker_resolver.compat import get_version, xrange_compat
+from berserker_resolver.base import set_kwargs
 
 _version = get_version()
-
-from threading import Thread
 
 if _version == 3:
     from queue import Queue, Empty
 elif _version == 2:
     from Queue import Queue, Empty
 
+from threading import Thread
 from math import ceil
 
 class ConcurrenceBase(object):

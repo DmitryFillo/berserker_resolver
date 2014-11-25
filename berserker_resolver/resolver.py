@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from dns.resolver import Resolver
-from berserker_resolver.base import set_kwargs, xrange_compat, fold
+from berserker_resolver.compat import xrange_compat
+from berserker_resolver.base import set_kwargs, fold
 from berserker_resolver.concurrence import ThreadConcurrence
 from berserker_resolver.mixins import WwwMixin
 

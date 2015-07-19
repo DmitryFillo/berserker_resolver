@@ -1,3 +1,4 @@
-from berserker_resolver.resolver import SimpleResolver, ThreadResolver
+from berserker_resolver.resolver import ThreadResolver as Resolver
+from berserker_resolver.extra import tries_detect
 
-__all__ = ['SimpleResolver', 'ThreadResolver']
+__all__ = ['Resolver', 'tries_detect',]

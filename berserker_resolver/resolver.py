@@ -1,83 +1,107 @@
-# -*- coding: utf-8 -*-
+import re
+import random
+import threading
+import dns.resolver
+import dns.exception
+from berserker_resolver.utils import locked_iterator
 
-from dns.resolver import Resolver
-from berserker_resolver.compat import xrange_compat
-from berserker_resolver.base import set_kwargs, fold
-from berserker_resolver.concurrence import ThreadConcurrence
-from berserker_resolver.mixins import WwwMixin
 
-class SimpleResolver(object):
-    tries = 2
-    lifetime = 1
-    nameservers = ['8.8.8.8', '8.8.4.4',]
-    resolver_backend = Resolver()
+class BaseResolver(object):
+    def __init__(self, *args, **kwargs):
+        self.tries = kwargs.get('tries', 1)
+        self.nameservers = kwargs.get('nameservers', ['8.8.8.8', '8.8.4.4', '77.88.8.8', '77.88.8.1',])
+        self.timeout = kwargs.get('timeout', 1)
+        self.qname = kwargs.get('qname', 'A')
+        self.verbose = kwargs.get('verbose', False)
+        self.www = kwargs.get('www', False)
+        self.www_combine = kwargs.get('www_combine', False)
+        self._backend = dns.resolver.Resolver(configure=False)
+        self._backend.lifetime = self.timeout
 
-    def __init__(self, **kwargs):
-        kwargs = set_kwargs(self, kwargs, ['tries', 'nameservers', 'lifetime'])
-        self.resolver_backend.lifetime = self.lifetime
-        super(SimpleResolver, self).__init__(**kwargs)
-
-    def query(self, to_resolve):
-        '''
-        Performs query to the backend.
-
-        :param to_resolve: List domains to resolve.
-
-        Exmaple:
-        to_resolve = [
-            dict(domain='xxx.com', nameserver='8.8.8.8'),
-            dict(domain='abc.com', nameserver='4.2.2.1')
-        ]
-        '''
-        ns = to_resolve['nameserver']
-        domain = to_resolve['domain']
-        result = []
+    def query(self, domain, ns=None):
+        self._backend.nameservers = [ns or random.choice(self.nameservers),]
         try:
-            self.resolver_backend.nameservers = [ns]
-            result = self.resolver_backend.query(domain, 'A')
-        except:
-            pass
-        return dict(
-            domain=domain,
-            nameserver=ns,
-            result=result
-        )
-
-    def attach_tries_and_nameservers(self, domains):
-        attached = []
-        for d in domains:
-            for t in xrange_compat(self.tries):
-                for ns in self.nameservers:
-                    attached.append(dict(nameserver=ns, domain=d))
-        return attached
-
-    def resolve_middleware(self, to_resolve):
-        resolved = []
-        for i in to_resolve:
-            resolved.append(self.query(i))
-        return resolved
+             answer = self._backend.query(domain, self.qname)
+        except dns.exception.DNSException as e:
+             answer = e
+        return domain, ns, answer
 
     def resolve(self, domains):
-        '''
-        Resolves domains.
+        if self.www:
+            domains = self._www(domains)
 
-        Firstly attaches tries and nameservers, secondly does resolve with resolve_middleware,
-        thirdly folds results.
-        '''
-        if not isinstance(domains, list):
-            raise TypeError('Domains must be in list, example: [\'google.com\', \'test.net\']')
+        domains = self._bind(domains)
+        resolved = self.run_queries(domains)
 
-        if len(domains) == 0:
-            return None
+        if self.www_combine:
+            resolved = self._www_combine(resolved)
 
-        to_resolve = self.attach_tries_and_nameservers(domains)
-        resolved = self.resolve_middleware(to_resolve)
-        resolved = fold((i['domain'], i['result']) for i in resolved)
+        result = self._fold(resolved)
+        return result
+
+    def _www(self, domains):
+        r = re.compile(r'(?:www\.){1}.+', re.I)
+        for i in domains:
+            if not r.match(i):
+                domains.append('www.'+i)
+        return domains
+
+    def _www_combine(self, resolved):
+        r = re.compile(r'(?:www\.)?(.+)', re.I)
+        resolved = ((r.match(domain).group(1), ns, answer) for domain, ns, answer in resolved)
         return resolved
 
-class ThreadResolver(WwwMixin, SimpleResolver, ThreadConcurrence):
-    def __init__(self, **kwargs):
-        super(ThreadResolver, self).__init__(**kwargs)
+    def _bind(self, domains):
+        for d in domains:
+            for t in range(self.tries):
+                for n in self.nameservers:
+                    yield d, n
 
-    def resolve_middleware(self, to_resolve):
-        return self.thread_resolve(to_resolve)
+    def _fold(self, resolved):
+        result = {}
+        result_exception = {}
+        for domain, ns, answer in resolved:
+            if not isinstance(answer, dns.exception.DNSException):
+                result.setdefault(domain, set()).update(answer.rrset)
+            elif self.verbose:
+                result_exception.setdefault(domain, dict()).update({ns: answer})
+        if self.verbose:
+            return {
+                'success' : result,
+                'error' : result_exception,
+            }
+        else:
+            return result
+
+    def run_queries(self, domains):
+        return NotImplemented
+
+
+class ThreadResolver(BaseResolver):
+    def __init__(self, *args, **kwargs):
+        super(ThreadResolver, self).__init__(*args, **kwargs)
+        self.threads = kwargs.get('threads', 16)
+
+        self.resolved_lock = threading.Lock()
+
+    @locked_iterator
+    def _bind(self, *args, **kwargs):
+        return super(ThreadResolver, self)._bind(*args, **kwargs)
+
+    def run_queries(self, domains):
+        resolved = []
+        threads = []
+        for i in range(self.threads):
+            t = threading.Thread(target=self.__worker, args=(domains, resolved))
+            t.start()
+            threads.append(t)
+        for i in threads:
+            i.join()
+        return resolved
+
+    def __worker(self, domains, resolved):
+        for i in domains:
+            answer = self.query(*i)
+            with self.resolved_lock:
+                resolved.append(answer)
+

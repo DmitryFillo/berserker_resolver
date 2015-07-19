@@ -1,6 +1,6 @@
 from berserker_resolver import Resolver
 
-def tries_detect(domain='youtube.com', cycles=100, **kwargs):
+def detect_tries(domain='youtube.com', cycles=100, **kwargs):
     tries = 0
     max_length = 0
 

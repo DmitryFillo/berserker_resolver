@@ -36,8 +36,15 @@ class BaseResolver(object):
         if self.www_combine:
             resolved = self._www_combine(resolved)
 
-        result = self._fold(resolved)
-        return result
+        result, result_exception = self._fold(resolved)
+
+        if self.verbose:
+            return {
+                'success' : result,
+                'error' : result_exception,
+            }
+        else:
+            return result
 
     def _www_add(self, domains):
         r = re.compile(r'(?:www\.){1}.+', re.I)
@@ -65,13 +72,7 @@ class BaseResolver(object):
                 result.setdefault(domain, set()).update(answer.rrset)
             elif self.verbose:
                 result_exception.setdefault(domain, dict()).update({ns: answer})
-        if self.verbose:
-            return {
-                'success' : result,
-                'error' : result_exception,
-            }
-        else:
-            return result
+        return result, result_exception
 
     def _run_queries(self, domains):
         return NotImplemented

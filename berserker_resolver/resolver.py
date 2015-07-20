@@ -31,7 +31,7 @@ class BaseResolver(object):
             domains = self._www_add(domains)
 
         domains = self._bind(domains)
-        resolved = self.run_queries(domains)
+        resolved = self._run_queries(domains)
 
         if self.www_combine:
             resolved = self._www_combine(resolved)
@@ -73,7 +73,7 @@ class BaseResolver(object):
         else:
             return result
 
-    def run_queries(self, domains):
+    def _run_queries(self, domains):
         return NotImplemented
 
 
@@ -93,7 +93,7 @@ class ThreadResolver(BaseResolver):
             with self._lock:
                 resolved.append(answer)
 
-    def run_queries(self, domains):
+    def _run_queries(self, domains):
         resolved = []
         threads = []
         for i in range(self.threads):

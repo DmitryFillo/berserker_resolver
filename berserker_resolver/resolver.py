@@ -81,27 +81,26 @@ class ThreadResolver(BaseResolver):
     def __init__(self, *args, **kwargs):
         super(ThreadResolver, self).__init__(*args, **kwargs)
         self.threads = kwargs.get('threads', 16)
-
-        self.resolved_lock = threading.Lock()
+        self._lock = threading.Lock()
 
     @locked_iterator
     def _bind(self, *args, **kwargs):
         return super(ThreadResolver, self)._bind(*args, **kwargs)
 
+    def _worker(self, domains, resolved):
+        for i in domains:
+            answer = self.query(*i)
+            with self._lock:
+                resolved.append(answer)
+
     def run_queries(self, domains):
         resolved = []
         threads = []
         for i in range(self.threads):
-            t = threading.Thread(target=self.__worker, args=(domains, resolved))
+            t = threading.Thread(target=self._worker, args=(domains, resolved))
             t.start()
             threads.append(t)
         for i in threads:
             i.join()
         return resolved
-
-    def __worker(self, domains, resolved):
-        for i in domains:
-            answer = self.query(*i)
-            with self.resolved_lock:
-                resolved.append(answer)
 

@@ -28,7 +28,7 @@ class BaseResolver(object):
 
     def resolve(self, domains):
         if self.www:
-            domains = self._www(domains)
+            domains = self._www_add(domains)
 
         domains = self._bind(domains)
         resolved = self.run_queries(domains)
@@ -39,7 +39,7 @@ class BaseResolver(object):
         result = self._fold(resolved)
         return result
 
-    def _www(self, domains):
+    def _www_add(self, domains):
         r = re.compile(r'(?:www\.){1}.+', re.I)
         for i in domains:
             if not r.match(i):

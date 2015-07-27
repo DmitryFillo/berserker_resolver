@@ -1,12 +1,16 @@
 from berserker_resolver import Resolver
 
 def detect_tries(domain='youtube.com', cycles=100, **kwargs):
-    tries = 0
-    max_length = 0
+    tries_all = []
 
     for i in range(cycles):
+        tries = 0
+        k = 0
+
         while True:
-            tries += 1
+            if k == 0:
+                tries += 1
+
             r = Resolver(tries=tries, **kwargs)
 
             new_lengths = set()
@@ -14,10 +18,14 @@ def detect_tries(domain='youtube.com', cycles=100, **kwargs):
                 new_lengths.add(len(r.resolve([domain])[domain]))
 
             if len(new_lengths) != 1:
-                max_length = max(new_lengths)
+                k = 0
                 continue
 
-            if list(new_lengths)[0] <= max_length:
+            k += 1
+
+            if k >= cycles:
                 break
 
-    return tries
+        tries_all.append(tries)
+
+    return max(tries_all)

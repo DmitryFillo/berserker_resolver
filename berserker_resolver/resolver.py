@@ -27,9 +27,6 @@ class BaseResolver(object):
         return domain, ns, answer
 
     def resolve(self, domains):
-        if self.www:
-            domains = self._www_add(domains)
-
         domains = self._bind(domains)
         resolved = self._run_queries(domains)
 
@@ -46,23 +43,21 @@ class BaseResolver(object):
         else:
             return result
 
-    def _www_add(self, domains):
-        r = re.compile(r'(?:www\.){1}.+', re.I)
-        for i in domains:
-            if not r.match(i):
-                domains.append('www.'+i)
-        return domains
-
     def _www_combine(self, resolved):
         r = re.compile(r'(?:www\.)?(.+)', re.I)
         resolved = ((r.match(domain).group(1), ns, answer) for domain, ns, answer in resolved)
         return resolved
 
     def _bind(self, domains):
+        r = re.compile(r'(?:www\.){1}.+', re.I)
         for d in domains:
             for t in range(self.tries):
                 for n in self.nameservers:
-                    yield d, n
+                    if self.www and not r.match(d):
+                        for i in (d, 'www.'+d):
+                            yield i, n
+                    else:
+                        yield d, n
 
     def _fold(self, resolved):
         result = {}

@@ -24,7 +24,7 @@ setup(
     test_suite='tests.get_suite',
     zip_safe=False,
     platforms='any',
-    long_description=read('README.md'),
+    long_description=read('README.rst'),
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',

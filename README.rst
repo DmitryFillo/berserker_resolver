@@ -1,5 +1,11 @@
+==================
 Berserker Resolver
 ==================
+
+.. image:: https://travis-ci.org/DmitryFillo/berserker_resolver.svg?branch=dev
+     :target: https://travis-ci.org/DmitryFillo/berserker_resolver
+.. image:: https://coveralls.io/repos/DmitryFillo/berserker_resolver/badge.svg?branch=dev&service=github
+     :target: https://coveralls.io/github/DmitryFillo/berserker_resolver?branch=dev
 
 Berserker Resolver is fast mass dns resolver which can bypass loadbalancers.
 

@@ -15,10 +15,12 @@ class Query(object):
         return self.query(*args, **kwargs)
 
     def _set_ns(self, ns):
-        self._backend.nameservers = [ns or random.choice(self.nameservers)]
+        ns = ns or random.choice(self.nameservers)
+        self._backend.nameservers = [ns]
+        return ns
 
     def query(self, domain, ns=None):
-        self._set_ns(ns)
+        ns = self._set_ns(ns)
         try:
              answer = self._backend.query(domain, self.qname)
         except dns.exception.DNSException as e:

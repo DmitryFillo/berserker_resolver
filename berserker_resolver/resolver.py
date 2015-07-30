@@ -63,7 +63,7 @@ class BaseResolver(object):
         result = {}
         result_exception = {}
         for domain, ns, answer in resolved:
-            if not isinstance(answer, dns.exception.DNSException):
+            if not isinstance(answer, Exception):
                 result.setdefault(domain, set()).update(answer.rrset)
             elif self.verbose:
                 result_exception.setdefault(domain, dict()).update({ns: answer})

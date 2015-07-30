@@ -1,6 +1,6 @@
 import unittest
 import dns.exception
-from unittest.mock import Mock
+from mock import Mock
 from berserker_resolver.query import Query
 
 

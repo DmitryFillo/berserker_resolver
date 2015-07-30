@@ -2,6 +2,7 @@ from berserker_resolver import Resolver
 
 def detect_tries(domain='youtube.com', cycles=100, **kwargs):
     tries_all = []
+    r = Resolver(**kwargs)
 
     for i in range(cycles):
         tries = 0
@@ -11,7 +12,7 @@ def detect_tries(domain='youtube.com', cycles=100, **kwargs):
             if k == 0:
                 tries += 1
 
-            r = Resolver(tries=tries, **kwargs)
+            r.tries = tries
 
             new_lengths = set()
             for i in range(cycles):

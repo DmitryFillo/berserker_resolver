@@ -19,7 +19,7 @@ class BaseResolver(object):
         self._backend.lifetime = self.timeout
 
     def query(self, domain, ns=None):
-        self._backend.nameservers = [ns or random.choice(self.nameservers),]
+        self._set_ns(ns)
         try:
              answer = self._backend.query(domain, self.qname)
         except dns.exception.DNSException as e:
@@ -42,6 +42,9 @@ class BaseResolver(object):
             }
         else:
             return result
+
+    def _set_ns(self, ns=None):
+        self._backend.nameservers = [ns or random.choice(self.nameservers)]
 
     def _www_combine(self, resolved):
         r = re.compile(r'(?:www\.)?(.+)', re.I)

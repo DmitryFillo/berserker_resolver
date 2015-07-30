@@ -21,6 +21,7 @@ setup(
     packages=['berserker_resolver'],
     install_requires=[dnspython],
     setup_requires=[dnspython],
+    test_suite='tests.suite',
     zip_safe=False,
     platforms='any',
     long_description=read('README.md'),

@@ -1,30 +1,16 @@
 import re
-import random
 import threading
-import dns.resolver
-import dns.exception
 from berserker_resolver.utils import locked_iterator
+from berserker_resolver.query import Query
 
 
 class BaseResolver(object):
     def __init__(self, *args, **kwargs):
         self.tries = kwargs.get('tries', 1)
         self.nameservers = kwargs.get('nameservers', ['8.8.8.8', '8.8.4.4', '77.88.8.8', '77.88.8.1',])
-        self.timeout = kwargs.get('timeout', 1)
-        self.qname = kwargs.get('qname', 'A')
         self.verbose = kwargs.get('verbose', False)
         self.www = kwargs.get('www', False)
         self.www_combine = kwargs.get('www_combine', False)
-        self._backend = dns.resolver.Resolver(configure=False)
-        self._backend.lifetime = self.timeout
-
-    def query(self, domain, ns=None):
-        self._set_ns(ns)
-        try:
-             answer = self._backend.query(domain, self.qname)
-        except dns.exception.DNSException as e:
-             answer = e
-        return domain, ns, answer
 
     def resolve(self, domains):
         domains = self._bind(domains)
@@ -42,9 +28,6 @@ class BaseResolver(object):
             }
         else:
             return result
-
-    def _set_ns(self, ns=None):
-        self._backend.nameservers = [ns or random.choice(self.nameservers)]
 
     def _www_combine(self, resolved):
         r = re.compile(r'(?:www\.)?(.+)', re.I)
@@ -79,6 +62,8 @@ class BaseResolver(object):
 class ThreadResolver(BaseResolver):
     def __init__(self, *args, **kwargs):
         super(ThreadResolver, self).__init__(*args, **kwargs)
+        self.query = Query(*args, **kwargs)
+
         self.threads = kwargs.get('threads', 16)
         self._lock = threading.Lock()
 

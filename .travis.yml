@@ -6,10 +6,7 @@ python:
   - 3.3
   - 3.4
 install:
-  - if [[ $TRAVIS_PYTHON_VERSION == 3* ]]; then travis_retry pip install dnspython3; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == 2* ]]; then travis_retry pip install dnspython; fi
   - pip install -r requirements-test.txt
-  - pip install coveralls
 
 script:
   - coverage run --source=berserker_resolver setup.py test

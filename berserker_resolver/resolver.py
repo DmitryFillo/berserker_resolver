@@ -59,9 +59,9 @@ class BaseResolver(object):
         return NotImplemented
 
 
-class ThreadResolver(BaseResolver):
+class Resolver(BaseResolver):
     def __init__(self, *args, **kwargs):
-        super(ThreadResolver, self).__init__(*args, **kwargs)
+        super(Resolver, self).__init__(*args, **kwargs)
         self.query = Query(*args, **kwargs)
 
         self.threads = kwargs.get('threads', 16)
@@ -69,7 +69,7 @@ class ThreadResolver(BaseResolver):
 
     @locked_iterator
     def _bind(self, *args, **kwargs):
-        return super(ThreadResolver, self)._bind(*args, **kwargs)
+        return super(Resolver, self)._bind(*args, **kwargs)
 
     def _worker(self, domains, resolved):
         for i in domains:

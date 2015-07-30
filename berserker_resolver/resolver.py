@@ -50,7 +50,7 @@ class BaseResolver(object):
         result_exception = {}
         for domain, ns, answer in resolved:
             if not isinstance(answer, Exception):
-                result.setdefault(domain, set()).update(answer.rrset)
+                result.setdefault(domain, set()).update(iter(answer))
             elif self.verbose:
                 result_exception.setdefault(domain, dict()).update({ns: answer})
         return result, result_exception

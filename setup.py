@@ -20,7 +20,7 @@ setup(
     url = 'https://github.com/DmitryFillo/berserker_resolver',
     packages=['berserker_resolver'],
     install_requires=[dnspython],
-    setup_requires=[dnspython],
+    tests_require=['mock'],
     test_suite='tests.get_suite',
     zip_safe=False,
     platforms='any',

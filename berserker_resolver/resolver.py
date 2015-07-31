@@ -15,10 +15,6 @@ class BaseResolver(object):
     def resolve(self, domains):
         domains = self._bind(domains)
         resolved = self._run_queries(domains)
-
-        if self.www_combine:
-            resolved = self._www_combine(resolved)
-
         result, result_exception = self._fold(resolved)
 
         if self.verbose:
@@ -28,11 +24,6 @@ class BaseResolver(object):
             }
         else:
             return result
-
-    def _www_combine(self, resolved):
-        r = re.compile(r'(?:www\.)?(.+)', re.I)
-        resolved = ((r.match(domain).group(1), ns, answer) for domain, ns, answer in resolved)
-        return resolved
 
     def _bind(self, domains):
         r = re.compile(r'(?:www\.){1}.+', re.I)
@@ -46,9 +37,12 @@ class BaseResolver(object):
                         yield d, n
 
     def _fold(self, resolved):
+        r = re.compile(r'(?:www\.)?(.+)', re.I)
         result = {}
         result_exception = {}
         for domain, ns, answer in resolved:
+            if self.www_combine:
+                domain = r.match(domain).group(1)
             if not isinstance(answer, Exception):
                 result.setdefault(domain, set()).update(iter(answer))
             elif self.verbose:

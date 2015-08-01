@@ -7,114 +7,372 @@ Berserker Resolver
 .. image:: https://coveralls.io/repos/DmitryFillo/berserker_resolver/badge.svg?branch=dev&service=github
      :target: https://coveralls.io/github/DmitryFillo/berserker_resolver?branch=dev
 
-Berserker Resolver is fast mass dns resolver which can bypass loadbalancers.
+Fast mass dns resolver which can bypass loadbalancers.
 
-Tested with Python 2.7.8 and Python 3.4.2. But hope it works with many other versions.
+.. contents::
 
-Goal
-----
+Motivation
+==========
 
-Firstly, fast resolving. Resolving in one thread is very boring. Berkserer Resolver using threads and it's really fast approach (maybe some asyncio in the future, see TODO below).
+DNS servers can provide load balancing of many types. It can be simple round-robin record ordering or another
+logic that depends on the implementation of a particular DNS server. See `RFC 1794 
+<https://tools.ietf.org/html/rfc1794>`_ to understand the capabilities and flexibility of the DNS protocol.
+As a result, it is possible that when the ordinary resolver is not able to get all IP addresses, e.g. DNS server
+can return small sets of IP addresses (or even only one IP) with low TTL per request. Number and presence of addresses
+may vary depending on the load of servers or randomly. Important to note that this information can be cached by other DNS
+servers and can be returned in different form. The full resolving problem arises when you want to resolve many domains
+with sufficient accuracy which useful for blocking network purposes, e.g. websites filtering, parental controls, etc.
 
-Secondly, loadbalancers. For example, www.youtube.com is using loadbalancers and nameservers returns set of ip addresses with small TTL (try dig @8.8.8.8 www.youtube.com or dig @ns1.google.com www.youtube.com).
-When TTL expired nameservers returns another set of ip addresses. How we can get ALL ip addresses? Of course, we know Google networks, but what about others sites?
-In addition, some servers caches answers and do it differently. This is really bad for fine resolving. Solution is simple: query set of nameservers many times in the hope of getting all addresses.
+Let's try to make a couple of resolve probes for www.twitter.com via Google Public DNS.
 
-And so Berserker Resolver emerged.
+.. code:: bash
 
-Backend of Berserker Resolver is dnspython.
+    ; <<>> DiG 9.10.2-P1 <<>> @8.8.8.8 www.twitter.com +nocomments +noquestion
+    ; (1 server found)
+    ;; global options: +cmd
+    www.twitter.com.	582	IN	CNAME	twitter.com.
+    twitter.com.		13	IN	A	199.16.156.230
+    twitter.com.		13	IN	A	199.16.156.198
+    twitter.com.		13	IN	A	199.16.156.70
+    twitter.com.		13	IN	A	199.16.156.38
+    ;; Query time: 5 msec
+    ;; SERVER: 8.8.8.8#53(8.8.8.8)
+    ;; WHEN: Sat Aug 01 22:59:41 MSK 2015
+    ;; MSG SIZE  rcvd: 122
 
-How it use
-----------
+.. code:: bash
 
-Install
+    ; <<>> DiG 9.10.2-P1 <<>> @8.8.8.8 www.twitter.com +nocomments +noquestion
+    ; (1 server found)
+    ;; global options: +cmd
+    www.twitter.com.	592	IN	CNAME	twitter.com.
+    twitter.com.		22	IN	A	199.16.156.198
+    twitter.com.		22	IN	A	199.16.156.70
+    twitter.com.		22	IN	A	199.16.156.6
+    twitter.com.		22	IN	A	199.16.156.38
+    ;; Query time: 5 msec
+    ;; SERVER: 8.8.8.8#53(8.8.8.8)
+    ;; WHEN: Sat Aug 01 22:59:45 MSK 2015
+    ;; MSG SIZE  rcvd: 122
+
+You see different RR sets with small TTL. What about another public DNS, e.g. 4.2.2.1 by Level 3 Communications?
+
+.. code:: bash
+
+    ; <<>> DiG 9.10.2-P1 <<>> @4.2.2.1 www.twitter.com +nocomments +noquestion
+    ; (1 server found)
+    ;; global options: +cmd
+    www.twitter.com.	153	IN	CNAME	twitter.com.
+    twitter.com.		218	IN	A	199.16.156.38
+    twitter.com.		218	IN	A	199.59.148.10
+    twitter.com.		218	IN	A	199.59.150.39
+    twitter.com.		218	IN	A	199.16.156.102
+    twitter.com.		218	IN	A	199.16.156.6
+    twitter.com.		218	IN	A	199.59.150.7
+    twitter.com.		218	IN	A	199.59.148.82
+    twitter.com.		218	IN	A	199.59.149.198
+    twitter.com.		218	IN	A	199.16.156.198
+    twitter.com.		218	IN	A	199.16.156.230
+    twitter.com.		218	IN	A	199.59.149.230
+    twitter.com.		218	IN	A	199.16.156.70
+    ;; Query time: 41 msec
+    ;; SERVER: 4.2.2.1#53(4.2.2.1)
+    ;; WHEN: Sat Aug 01 22:58:57 MSK 2015
+    ;; MSG SIZE  rcvd: 250
+
+.. code:: bash
+
+    ; <<>> DiG 9.10.2-P1 <<>> @4.2.2.1 www.twitter.com +nocomments +noquestion
+    ; (1 server found)
+    ;; global options: +cmd
+    www.twitter.com.	390	IN	CNAME	twitter.com.
+    twitter.com.		28	IN	A	185.45.5.43
+    twitter.com.		28	IN	A	185.45.5.32
+    ;; Query time: 43 msec
+    ;; SERVER: 4.2.2.1#53(4.2.2.1)
+    ;; WHEN: Sat Aug 01 22:58:58 MSK 2015
+    ;; MSG SIZE  rcvd: 79
+
+Yeah, you will see similar results with many other popular services. Let's try www.youtube.com.
+
+.. code:: bash
+
+    ; <<>> DiG 9.10.2-P1 <<>> @8.8.8.8 www.youtube.com +nocomments +noquestion
+    ; (1 server found)
+    ;; global options: +cmd
+    www.youtube.com.	21584	IN	CNAME	youtube-ui.l.google.com.
+    youtube-ui.l.google.com. 284	IN	CNAME	wide-youtube.l.google.com.
+    wide-youtube.l.google.com. 284	IN	A	64.233.165.198
+    ;; Query time: 4 msec
+    ;; SERVER: 8.8.8.8#53(8.8.8.8)
+    ;; WHEN: Sat Aug 01 22:49:32 MSK 2015
+    ;; MSG SIZE  rcvd: 121
+
+.. code:: bash
+
+    ; <<>> DiG 9.10.2-P1 <<>> @8.8.8.8 www.youtube.com +nocomments +noquestion
+    ; (1 server found)
+    ;; global options: +cmd
+    www.youtube.com.	21479	IN	CNAME	youtube-ui.l.google.com.
+    youtube-ui.l.google.com. 179	IN	CNAME	wide-youtube.l.google.com.
+    wide-youtube.l.google.com. 179	IN	A	173.194.71.198
+    ;; Query time: 5 msec
+    ;; SERVER: 8.8.8.8#53(8.8.8.8)
+    ;; WHEN: Sat Aug 01 22:49:35 MSK 2015
+    ;; MSG SIZE  rcvd: 121
+
+.. code:: bash
+
+    ; <<>> DiG 9.10.2-P1 <<>> @4.2.2.1 www.youtube.com +nocomments +noquestion
+    ; (1 server found)
+    ;; global options: +cmd
+    www.youtube.com.	81953	IN	CNAME	youtube-ui.l.google.com.
+    youtube-ui.l.google.com. 299	IN	A	173.194.44.36
+    youtube-ui.l.google.com. 299	IN	A	173.194.44.40
+    youtube-ui.l.google.com. 299	IN	A	173.194.44.35
+    youtube-ui.l.google.com. 299	IN	A	173.194.44.33
+    youtube-ui.l.google.com. 299	IN	A	173.194.44.46
+    youtube-ui.l.google.com. 299	IN	A	173.194.44.32
+    youtube-ui.l.google.com. 299	IN	A	173.194.44.37
+    youtube-ui.l.google.com. 299	IN	A	173.194.44.34
+    youtube-ui.l.google.com. 299	IN	A	173.194.44.41
+    youtube-ui.l.google.com. 299	IN	A	173.194.44.39
+    youtube-ui.l.google.com. 299	IN	A	173.194.44.38
+    ;; Query time: 41 msec
+    ;; SERVER: 4.2.2.1#53(4.2.2.1)
+    ;; WHEN: Sat Aug 01 22:53:00 MSK 2015
+    ;; MSG SIZE  rcvd: 254
+
+.. code:: bash
+
+    ; <<>> DiG 9.10.2-P1 <<>> @4.2.2.1 www.youtube.com +nocomments +noquestion
+    ; (1 server found)
+    ;; global options: +cmd
+    www.youtube.com.	71178	IN	CNAME	youtube-ui.l.google.com.
+    youtube-ui.l.google.com. 237	IN	A	216.58.209.206
+    ;; Query time: 43 msec
+    ;; SERVER: 4.2.2.1#53(4.2.2.1)
+    ;; WHEN: Sat Aug 01 22:53:00 MSK 2015
+    ;; MSG SIZE  rcvd: 83
+
+This outputs may be outdated soon, but it is only necessary to show the behavior of DNS. Any website can use
+load balancing and you not able to do full resolving simply.
+
+The solution is query many nameservers many times for each domain. Yes, it's a bit clumsy, but works well enough
+in many cases. If the number of times increases, the resolving accuracy increases too. The resolving should be performed
+in multiple threads, because one thread resolving is slow, especially in this case.
+
+And so Berserker Resolver is emerged.
+
+*It's worth noting that full resolving may be impossible because GEO load balancing or resolving can be occurred 
+"at the wrong time in the wrong place" when some servers are down and their IP addresses are excluded from DNS pool by fault
+tolerance algorithm. If you need actual information you should schedule resolving attempts (cron), maintain your DNS database,
+maybe perform resolving from different networks/servers. There is no universal solution for that cases, but you can use Berserker
+Resolver as the backend in your application.*
+
+Supported versions
+==================
+
+* Python 2.6
+* Python 2.7
+* Python 3.2
+* Python 3.3
+* Python 3.4
+
+Installation
+============
+
+Install using pip::
 
     pip install berserker_resolver
 
-You can use ThreadResolver which is thread-version of Berserker Resolver.
+Query backend
+=============
 
-    from berserker_resolver import ThreadResolver
+Berserker Resolver is using `dnspython <http://www.dnspython.org/>`_ as query backend and so operates with its built-in types.
 
-    resolver = ThreadResolver()
+Resolver class
+==============
 
-    to_resolve = ['ya.ru',]
+Main class, core of the Berserker Resolver.
 
-    resolved = resolver.resolve(to_resolve)
+Methods:
 
-    print(list(resolved)) # [('ya.ru', {'213.180.204.3', '93.158.134.3', '213.180.193.3'})]
++ resolve
 
-Settings
---------
+Properties:
 
-Keyword arguments to the constructor can be:
++ nameservers
++ tries
++ timeout
++ qname
++ threads
++ www
++ www_combine
++ verbose
 
-* **threads** is in how many threads resolve domains. Default is 1024.
-* **tries** is how many times each nameserver will be quered. Default is 2.
-* **lifetime** is timeout for each query. Default is 1 second.
-* **nameservers** is nameservers list. Default is ['8.8.8.8', '8.8.4.4'].
+Properties can be assign via constructor or directly to the object.
 
-Methods
--------
+Resolver.resolve
+----------------
 
-Main method is **resolve**. Note that the resolve method always returns **dict_items** (Python3) and **dictionary-itemiterator** (Python2). Argument must be list of domains.
+Resolve method. It takes list of domains to resolve as a single argument and
+returns dictinary with results.
 
-Other methods you can find in the sources. Berserker Resolver is modular and simple.
+.. code:: python
 
-About threads
--------------
+    from berserker_resolver import Resolver
 
-Note that more threads lead to increase speed of resolving. You should test it and choose desired value. But carefully, you can create a DDoS attack!
-And also check this: http://stackoverflow.com/questions/344203/maximum-number-of-threads-per-process-in-linux
+    domains = ['kernel.org', 'toster.ru']
 
-WWW-prefix feature
-------------------
+    resolver = Resolver()
+    result = resolver.resolve(domains)
 
-Sometimes we need resolve domains with **www** prefix. Berserker Resolver can add this prefix to the list of domains automatically.
+    print(result)
+    '''
+        {
+            'toster.ru': {
+                <DNS IN A rdata: 178.248.236.52>
+            },
+            'kernel.org': {
+                <DNS IN A rdata: 198.145.20.140>,
+                <DNS IN A rdata: 199.204.44.194>,
+                <DNS IN A rdata: 149.20.4.69>
+            }
+        }
+    '''
 
-If **www_resolve** is True resolver will duplicate domains with **www** prefix.
+Resolver.nameservers
+--------------------
 
-    from berserker_resolver import ThreadResolver
+List of nameservers for resolving, each of them will be queried for particular domain.
 
-    resolver = ThreadResolver(www_resolve=True)
+Default is ``['8.8.8.8', '8.8.4.4', '77.88.8.8', '77.88.8.1']``.
 
-    to_resolve = ['ya.ru',]
+Resolver.tries
+--------------
 
-    resolved = resolver.resolve(to_resolve)
+Number of queries for each nameserver.
 
-    print(list(resolved))) # [('ya.ru', {'213.180.204.3', '93.158.134.3', '213.180.193.3'}), ('www.ya.ru', {'213.180.204.3', '93.158.134.3', '213.180.193.3'})]
+Default is ``1``.
 
-If **www_resolve_combine** is True resolver will combine domain with **www** prefix to his no-www version.
+Resolver.timeout
+----------------
 
-    from berserker_resolver import ThreadResolver
+The total number of seconds to spend trying to get an answer to the query.
 
-    resolver = ThreadResolver()
+Default is ``1``.
 
-    to_resolve = ['test.example',]
+Resolver.qname
+--------------
 
-    resolved = resolver.resolve(to_resolve)
+DNS query type name.
 
-    print(list(resolved)) # [('test.example', {'1.1.1.1'})]
+Default is ``A``.
 
-    to_resolve = ['www.test.example',]
+Resolver.threads
+----------------
 
-    resolved = resolver.resolve(to_resolve)
+Number of threads.
 
-    print(list(resolved)) # [('www.test.example', {'2.2.2.2'})]
+Note that more threads lead to increase speed of resolving, but too many threads lead to threads context switching overhead.
+You should test different numbers and choose one suitable for your systems. Also be careful with large number of threads, you can
+flood the DNS server. If you want to use crazy large amount of threads, check
+`stackoverflow thread <https://stackoverflow.com/questions/344203/maximum-number-of-threads-per-process-in-linux>`_.
 
-    resolver = ThreadResolver(www_resolve=True, www_resolve_combine=True)
+Default is ``16``.
 
-    to_resolve = ['test.example',]
+WWW-prefix feature: Resolver.www and Resolver.www_combine
+---------------------------------------------------------
 
-    resolved = resolver.resolve(to_resolve)
+Sometimes we need to resolve domains with ``www`` prefix. If ``Resolver.www`` is ``True`` Berserker Resolver will automatically
+appends ``www`` if domain doesn't already have it.
 
-    print(list(resolved)) # [('test.example', {'1.1.1.1', '2.2.2.2'})]
+.. code:: python
 
-More examples
--------------
+    from berserker_resolver import Resolver
 
-See https://github.com/DmitryFillo/berserker_resolver/blob/master/examples.py
+    domains = ['facebook.com']
 
-TODO
--------------
+    resolver = Resolver(www=True)
+    result = resolver.resolve(domains)
 
-See https://github.com/DmitryFillo/berserker_resolver/blob/master/TODO
+    print(result)
+    '''
+        {
+            'www.facebook.com': {
+                <DNS IN A rdata: 31.13.91.2>,
+                <DNS IN A rdata: 173.252.88.66>,
+                <DNS IN A rdata: 31.13.93.3>,
+                <DNS IN A rdata: 31.13.64.1>
+            },
+            'facebook.com': {
+                <DNS IN A rdata: 173.252.120.6>
+            }
+        }
+    '''
+
+If ``Resolver.www_combine`` is ``True`` Berserker Resolver will automatically combain results to the one domain without ``www`` prefix.
+
+.. code:: python
+
+    from berserker_resolver import Resolver
+
+    domains = ['facebook.com']
+
+    resolver = Resolver(www=True, www_combine=True)
+    result = resolver.resolve(domains)
+
+    print(result)
+    '''
+        {
+            'facebook.com': {
+                <DNS IN A rdata: 31.13.91.2>,
+                <DNS IN A rdata: 173.252.88.66>,
+                <DNS IN A rdata: 31.13.93.3>,
+                <DNS IN A rdata: 31.13.64.1>,
+                <DNS IN A rdata: 173.252.120.6>
+            }
+        }
+    '''
+
+Default is ``False`` for both options.
+
+Resolver.verbose
+----------------
+
+Errors may occur during name resolution. If this property is ``True`` result of ``resolve`` method
+will be dict with successfully resolved domains and unsuccessfully resolved domains.
+
+.. code:: python
+
+    from berserker_resolver import Resolver
+
+    domains = ['nonexistent.domain', 'facebook.com']
+
+    resolver = Resolver(verbose=True)
+    result = resolver.resolve(domains)
+
+    print(result)
+    '''
+        {
+            'success': {
+                'facebook.com': {
+                    <DNS IN A rdata: 173.252.120.6>
+                }
+            },
+            'error': {
+                'nonexistent.domain': {
+                    '77.88.8.1': NXDOMAIN(),
+                    '8.8.4.4': NXDOMAIN(),
+                    '8.8.8.8': NXDOMAIN(),
+                    '77.88.8.8': NXDOMAIN()
+                }
+            }
+        }
+    '''
+
+Errors comes from dnspython backend as ``dns.exception.DNSException`` subclasses. 
+`More info <http://www.dnspython.org/docs/1.12.0/dns.exception.DNSException-class.html>`_ about built-in exceptions.
+
+Default is ``False``.

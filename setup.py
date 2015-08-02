@@ -4,10 +4,11 @@ from setuptools import setup
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-dnspython = 'dnspython'
-
-if sys.version_info[0] == 3:
-    dnspython += '3'
+def dep_dnspython():
+    name = 'dnspython'
+    if sys.version_info[0] == 3:
+        name += '3'
+    return name
 
 setup(
     name = 'berserker_resolver',
@@ -19,7 +20,7 @@ setup(
     keywords = 'dns resolver berserker loadbalancer',
     url = 'https://github.com/DmitryFillo/berserker_resolver',
     packages=['berserker_resolver'],
-    install_requires=[dnspython],
+    install_requires=[dep_dnspython()],
     tests_require=['mock'],
     test_suite='tests.get_suite',
     zip_safe=False,

@@ -170,6 +170,11 @@ tolerance algorithm. If you need actual information you should schedule resolvin
 maybe perform resolving from different networks/servers. There is no universal solution for that cases, but you can use Berserker
 Resolver as the backend in your application.*
 
+Query backend
+=============
+
+Berserker Resolver is using `dnspython <http://www.dnspython.org/>`_ as query backend and so operates with its built-in types.
+
 Supported versions
 ==================
 
@@ -186,15 +191,10 @@ Install using pip::
 
     pip install berserker_resolver
 
-Query backend
-=============
-
-Berserker Resolver is using `dnspython <http://www.dnspython.org/>`_ as query backend and so operates with its built-in types.
-
 Resolver class
 ==============
 
-Main class, core of the Berserker Resolver.
+Core of the Berserker Resolver.
 
 Methods:
 
@@ -216,8 +216,8 @@ Properties can be assign via constructor or directly to the object.
 Resolver.resolve
 ----------------
 
-Resolve method. It takes list of domains to resolve as a single argument and
-returns dictinary with results.
+Resolve method. It takes list of domains as a single argument and
+returns dictionary with results.
 
 .. code:: python
 
@@ -361,7 +361,7 @@ This property enables automatic combining *www* prefix domains with theirs non-*
         }
     '''
 
-You can use this property together with ``Resolver.www``
+Powerful use case is combine this property together with ``Resolver.www``.
 
 .. code:: python
 

@@ -14,16 +14,16 @@ Fast mass dns resolver which can bypass loadbalancers.
 Motivation
 ==========
 
-DNS servers can provide load balancing of many types. It can be simple round-robin record ordering or another
-logic that depends on the implementation of a particular DNS server. See `RFC 1794 
-<https://tools.ietf.org/html/rfc1794>`_ to understand the capabilities and flexibility of the DNS protocol.
-As a result, it is possible that when the ordinary resolver is not able to get all IP addresses, e.g. DNS server
-can return small sets of IP addresses (or even only one IP) with low TTL per request. Number and presence of addresses
-may vary depending on the load of servers or randomly. Important to note that this information can be cached by other DNS
-servers and can be returned in different form. The full resolving problem arises when you want to resolve many domains
-with sufficient accuracy which useful for blocking network purposes, e.g. websites filtering, parental controls, etc.
+DNS servers can provide load balancing of many types. It can be simple round-robin or another algorithm that
+depends on the implementation of a particular DNS server. See `RFC 1794 <https://tools.ietf.org/html/rfc1794>`_ 
+to understand the capabilities and flexibility of the DNS protocol. As a result, it is possible that when the ordinary
+resolver is not able to get *all* IP addresses, e.g. DNS server can return small sets of IP addresses (or even only one IP)
+with low TTL per request. Number and presence of addresses may vary depending on the load of servers. Important to note
+that this information can be cached by other DNS servers and can be distorted. Getting all IP addresses problem arises when
+you want to resolve many domains with sufficient accuracy which useful for blocking network purposes, e.g. websites filtering,
+parental controls, etc.
 
-Let's try to make a couple of resolve probes for www.twitter.com via Google Public DNS.
+Let's try to make a couple probes for www.twitter.com via Google Public DNS.
 
 .. code:: bash
 
@@ -93,7 +93,7 @@ You see different RR sets with small TTL. What about another public DNS, e.g. 4.
     ;; WHEN: Sat Aug 01 22:58:58 MSK 2015
     ;; MSG SIZE  rcvd: 79
 
-Yeah, you will see similar results with many other popular services. Let's try www.youtube.com.
+Let's try www.youtube.com.
 
 .. code:: bash
 
@@ -159,14 +159,14 @@ This outputs may be outdated soon, but it is only necessary to show the behavior
 load balancing and you not able to do full resolving simply.
 
 The solution is query many nameservers many times for each domain. Yes, it's a bit clumsy, but works well enough
-in many cases. If the number of times increases, the resolving accuracy increases too. The resolving should be performed
-in multiple threads, because one thread resolving is slow, especially in this case.
+in many cases. The resolving should be performed in multiple threads, because resolving in one thread is slow,
+especially in this case.
 
 And so Berserker Resolver is emerged.
 
 *It's worth noting that full resolving may be impossible because GEO load balancing or resolving can be occurred 
 "at the wrong time in the wrong place" when some servers are down and their IP addresses are excluded from DNS pool by fault
-tolerance algorithm. If you need actual information you should schedule resolving attempts (cron), maintain your DNS database,
+tolerance algorithm. If you need actual information you should schedule resolving attempts, maintain your DNS database,
 maybe perform resolving from different networks/servers. There is no universal solution for that cases, but you can use Berserker
 Resolver as the backend in your application.*
 
@@ -216,8 +216,7 @@ Properties can be assign via constructor or directly to the object.
 Resolver.resolve
 ----------------
 
-Resolve method. It takes list of domains as a single argument and
-returns dictionary with results.
+Resolve method. It takes list of domains and returns dictionary with results.
 
 .. code:: python
 
@@ -247,12 +246,18 @@ Resolver.nameservers
 
 List of nameservers for resolving, each of them will be queried for particular domain.
 
+The larger the list, the more chances to get all IP addresses, but it increases
+time  needed for resolving.
+
 Default is ``['8.8.8.8', '8.8.4.4', '77.88.8.8', '77.88.8.1']``.
 
 Resolver.tries
 --------------
 
 Number of queries for each nameserver.
+
+If the number of times increases, the resolving accuracy increases too, but it also
+increases time to resolving.
 
 Default is ``1``.
 
@@ -261,7 +266,23 @@ Resolver.timeout
 
 The total number of seconds to spend trying to get an answer to the query.
 
+Note that low timeout combined with high values of ``Resolver.tries`` and ``Resolver.threads`` can lead to
+numerous timeout errors when nameserver does not have time to return a response.
+
 Default is ``1``.
+
+Resolver.threads
+----------------
+
+Number of threads.
+
+More threads lead to increase speed of resolving, but too many threads lead to threads switching overhead.
+You should test different numbers and choose one suitable for your systems. Also be careful with large number of threads, you can
+flood the DNS server. If you want to use crazy large amount of threads, check
+`stackoverflow thread <https://stackoverflow.com/questions/344203/maximum-number-of-threads-per-process-in-linux>`_ and
+increase ``Resolver.timeout``.
+
+Default is ``16``.
 
 Resolver.qname
 --------------
@@ -269,18 +290,6 @@ Resolver.qname
 DNS query type name.
 
 Default is ``A``.
-
-Resolver.threads
-----------------
-
-Number of threads.
-
-Note that more threads lead to increase speed of resolving, but too many threads lead to threads context switching overhead.
-You should test different numbers and choose one suitable for your systems. Also be careful with large number of threads, you can
-flood the DNS server. If you want to use crazy large amount of threads, check
-`stackoverflow thread <https://stackoverflow.com/questions/344203/maximum-number-of-threads-per-process-in-linux>`_.
-
-Default is ``16``.
 
 Resolver.www
 ------------
@@ -390,8 +399,17 @@ Default is ``False``.
 Resolver.verbose
 ----------------
 
-Errors may occur during name resolution. If this property is ``True`` result of ``resolve`` method
-will be dict with successfully resolved domains and unsuccessfully resolved domains.
+This property enables error reporting, e.g. nxdomain, noanswer, etc. ``Resolver.resolve`` normally returns
+dictionary with resolved domains, but with this option it returns dictionary with two keys:
+
++ success
++ error
+
+``result['success']`` is dictionary with successfully resolved domains, as if without ``Resolver.verbose``.
+``result['error']`` is dictionary with unsuccessfully resolved domains where each key contains another dictionary
+with per nameserver exception. Exceptions comes from dnspython backend as ``dns.exception.DNSException`` subclasses.
+Check out `dnspython docs <http://www.dnspython.org/docs/1.12.0/dns.exception.DNSException-class.html>`_ for more
+information about built-in exceptions.
 
 .. code:: python
 
@@ -421,7 +439,32 @@ will be dict with successfully resolved domains and unsuccessfully resolved doma
         }
     '''
 
-Errors comes from dnspython backend as ``dns.exception.DNSException`` subclasses. 
-`More info <http://www.dnspython.org/docs/1.12.0/dns.exception.DNSException-class.html>`_ about built-in exceptions.
+*Note that particular domain can be placed in both dictionaries, because some nameservers can return answer and some not.*
+
+.. code:: python
+
+    from berserker_resolver import Resolver
+
+    domains = ['facebook.com']
+
+    # 216.239.32.10 is ns1.google.com
+    resolver = Resolver(nameservers=['216.239.32.10', '8.8.8.8'], verbose=True)
+    result = resolver.resolve(domains)
+
+    print(result)
+    '''
+        {
+            'success': {
+                'facebook.com': {
+                    <DNS IN A rdata: 173.252.120.6>
+                }
+            },
+            'error': {
+                'facebook.com': {
+                    '216.239.32.10': NoNameservers()
+                }
+            }
+        }
+    '''
 
 Default is ``False``.

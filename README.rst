@@ -282,17 +282,16 @@ flood the DNS server. If you want to use crazy large amount of threads, check
 
 Default is ``16``.
 
-WWW-prefix feature: Resolver.www and Resolver.www_combine
----------------------------------------------------------
+Resolver.www
+------------
 
-Sometimes we need to resolve domains with ``www`` prefix. If ``Resolver.www`` is ``True`` Berserker Resolver will automatically
-appends ``www`` if domain doesn't already have it.
+This property enables automatic addition/removal of *www* prefix depending on the domain.
 
 .. code:: python
 
     from berserker_resolver import Resolver
 
-    domains = ['facebook.com']
+    domains = ['wikipedia.org', 'www.toster.ru']
 
     resolver = Resolver(www=True)
     result = resolver.resolve(domains)
@@ -300,19 +299,69 @@ appends ``www`` if domain doesn't already have it.
     print(result)
     '''
         {
-            'www.facebook.com': {
-                <DNS IN A rdata: 31.13.91.2>,
-                <DNS IN A rdata: 173.252.88.66>,
-                <DNS IN A rdata: 31.13.93.3>,
-                <DNS IN A rdata: 31.13.64.1>
+            'toster.ru': {
+                <DNS IN A rdata: 178.248.236.52>
             },
-            'facebook.com': {
-                <DNS IN A rdata: 173.252.120.6>
+            'www.wikipedia.org': {
+                <DNS IN A rdata: 91.198.174.192>
+            },
+            'www.toster.ru': {
+                <DNS IN A rdata: 178.248.236.52>
+            },
+            'wikipedia.org': {
+                <DNS IN A rdata: 91.198.174.192>
             }
         }
     '''
 
-If ``Resolver.www_combine`` is ``True`` Berserker Resolver will automatically combain results to the one domain without ``www`` prefix.
+Default is ``False``.
+
+Resolver.www_combine
+--------------------
+
+This property enables automatic combining *www* prefix domains with theirs non-*www* versions.
+
+.. code:: python
+
+    from berserker_resolver import Resolver
+
+    domains = ['facebook.com', 'www.facebook.com']
+
+    resolver = Resolver()
+    result = resolver.resolve(domains)
+
+    print(result)
+    '''
+        {
+            'facebook.com': {
+                <DNS IN A rdata: 173.252.120.6>
+            },
+            'www.facebook.com': {
+                <DNS IN A rdata: 31.13.93.3>,
+                <DNS IN A rdata: 31.13.91.2>,
+                <DNS IN A rdata: 173.252.88.66>,
+                <DNS IN A rdata: 31.13.64.1>
+            }
+        }
+    '''
+
+    resolver.www_combine = True
+    result = resolver.resolve(domains)
+
+    print(result)
+    '''
+        {
+            'www.facebook.com': {
+                <DNS IN A rdata: 173.252.120.6>
+                <DNS IN A rdata: 31.13.93.3>,
+                <DNS IN A rdata: 31.13.91.2>,
+                <DNS IN A rdata: 173.252.88.66>,
+                <DNS IN A rdata: 31.13.64.1>
+            }
+        }
+    '''
+
+You can use this property together with ``Resolver.www``
 
 .. code:: python
 
@@ -326,17 +375,17 @@ If ``Resolver.www_combine`` is ``True`` Berserker Resolver will automatically co
     print(result)
     '''
         {
-            'facebook.com': {
+            'www.facebook.com': {
+                <DNS IN A rdata: 173.252.120.6>
+                <DNS IN A rdata: 31.13.93.3>,
                 <DNS IN A rdata: 31.13.91.2>,
                 <DNS IN A rdata: 173.252.88.66>,
-                <DNS IN A rdata: 31.13.93.3>,
-                <DNS IN A rdata: 31.13.64.1>,
-                <DNS IN A rdata: 173.252.120.6>
+                <DNS IN A rdata: 31.13.64.1>
             }
         }
     '''
 
-Default is ``False`` for both options.
+Default is ``False``.
 
 Resolver.verbose
 ----------------

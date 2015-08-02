@@ -26,18 +26,23 @@ class BaseResolver(object):
             return result
 
     def _bind(self, domains):
-        r = re.compile(r'(?:www\.){1}.+', re.I)
+        r = re.compile(r'(?:www\.){1}(.+\..+)', re.I)
         for d in domains:
             for t in range(self.tries):
                 for n in self.nameservers:
-                    if self.www and not r.match(d):
-                        for i in (d, 'www.'+d):
-                            yield i, n
+                    if self.www:
+                        m = r.match(d)
+                        if not m:
+                            for i in (d, 'www.'+d):
+                                yield i, n
+                        else:
+                            for i in (d, m.group(1)):
+                                yield i, n
                     else:
                         yield d, n
 
     def _fold(self, resolved):
-        r = re.compile(r'(?:www\.)?(.+)', re.I)
+        r = re.compile(r'(?:www\.)?(.+\..+)', re.I)
         result = {}
         result_exception = {}
         for domain, ns, answer in resolved:

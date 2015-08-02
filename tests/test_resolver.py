@@ -31,17 +31,38 @@ class BaseResolverTestCase(unittest.TestCase):
         self.resolver._run_queries = lambda d: [(i[0], i[1], ['1.1.1.1', '2.2.2.2', '1.1.1.1']) for i in d]
         self.resolver.www = True
 
-        d = ['ya.ru', 'fillo.me']
+        d = ['ya.ru', 'fillo.me', 'www.ru', 'www.example.com', 'www.www.com',]
         r = {
             'ya.ru' : set(['1.1.1.1', '2.2.2.2']),
             'fillo.me' : set(['1.1.1.1', '2.2.2.2']),
+            'example.com' : set(['1.1.1.1', '2.2.2.2']),
+            'www.ru' : set(['1.1.1.1', '2.2.2.2']),
+            'www.com' : set(['1.1.1.1', '2.2.2.2']),
             'www.ya.ru' : set(['1.1.1.1', '2.2.2.2']),
             'www.fillo.me' : set(['1.1.1.1', '2.2.2.2']),
+            'www.www.ru' : set(['1.1.1.1', '2.2.2.2']),
+            'www.www.com' : set(['1.1.1.1', '2.2.2.2']),
+            'www.example.com' : set(['1.1.1.1', '2.2.2.2']),
         }
 
         self.assertEqual(self.resolver.resolve(d), r)
 
     def test_resolve_www_combine(self):
+        self.resolver._run_queries = lambda d: [(i[0], i[1], ['1.1.1.1', '2.2.2.2', '1.1.1.1']) for i in d]
+        self.resolver.www_combine = True
+
+        d = ['ya.ru', 'fillo.me', 'www.ru', 'www.example.com', 'www.www.com',]
+        r = {
+            'ya.ru' : set(['1.1.1.1', '2.2.2.2']),
+            'fillo.me' : set(['1.1.1.1', '2.2.2.2']),
+            'example.com' : set(['1.1.1.1', '2.2.2.2']),
+            'www.ru' : set(['1.1.1.1', '2.2.2.2']),
+            'www.com' : set(['1.1.1.1', '2.2.2.2']),
+        }
+
+        self.assertEqual(self.resolver.resolve(d), r)
+
+    def test_resolve_www_and_www_combine(self):
         def run_queries(domains):
             result = []
             for d, ns in domains:

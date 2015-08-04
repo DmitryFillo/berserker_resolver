@@ -199,6 +199,7 @@ Core of the Berserker Resolver.
 Methods:
 
 + resolve
++ query
 
 Properties:
 
@@ -240,6 +241,28 @@ Resolve method. It takes list of domains and returns dictionary with results.
             }
         }
     '''
+
+Resolver.query
+--------------
+
+Query method, wrapper around ``dns.resolver.Resolver.query`` from dnspython. It takes domain and nameserver,
+and returns result of the query. Nameserver is optional, if not given, random from ``Resolver.nameservers``
+will be used.
+
+Can throw exception, see details `here <http://www.dnspython.org/docs/1.12.0/dns.resolver.Resolver-class.html#query>`_.
+
+.. code:: python
+
+    from berserker_resolver import Resolver
+
+    resolver = Resolver()
+
+    result = resolver.query('facebook.com')
+    print(list(result)) # [<DNS IN A rdata: 173.252.120.6>]
+
+    # Query to the local dns.
+    result = resolver.query('facebook.com', '127.0.0.1')
+    print(list(result)) # [<DNS IN A rdata: 173.252.120.6>]
 
 Resolver.nameservers
 --------------------

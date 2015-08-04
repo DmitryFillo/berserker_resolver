@@ -1,4 +1,5 @@
 import unittest
+import dns.exception
 from mock import Mock
 from collections import defaultdict
 from berserker_resolver.resolver import BaseResolver, Resolver
@@ -11,153 +12,132 @@ class BaseResolverTestCase(unittest.TestCase):
 
     def test_defaults(self):
         self.assertEqual(self.resolver.tries, 1)
+        self.assertEqual(self.resolver.timeout, 1)
+        self.assertEqual(self.resolver._backend.lifetime, self.resolver.timeout)
+        self.assertEqual(self.resolver.qname, 'A')
         self.assertEqual(self.resolver.nameservers, ['8.8.8.8', '8.8.4.4', '77.88.8.8', '77.88.8.1',])
         self.assertFalse(self.resolver.verbose)
         self.assertFalse(self.resolver.www)
         self.assertFalse(self.resolver.www_combine)
 
+    def test_query(self):
+        self.resolver.nameservers = ['ip', 'second.ip', 'another.ip']
+
+        def query(domain, qname):
+            return domain, qname, self.resolver._backend.nameservers[0]
+
+        self.resolver._backend.query = Mock(side_effect=query)
+
+        result = self.resolver.query('test')
+        self.assertEqual(result[0], 'test')
+        self.assertEqual(result[1], 'A')
+        self.assertTrue(result[2] in self.resolver.nameservers)
+
+        result = self.resolver.query('test', 'custom.ip')
+        self.assertEqual(result[0], 'test')
+        self.assertEqual(result[1], 'A')
+        self.assertEqual(result[2], 'custom.ip')
+
     def test_resolve(self):
-        self.resolver._run_queries = lambda d: [(i[0], i[1], ['1.1.1.1', '2.2.2.2', '1.1.1.1']) for i in d]
-
         d = ['ya.ru', 'fillo.me']
-        r = {
-            'ya.ru' : set(['1.1.1.1', '2.2.2.2']),
-            'fillo.me' : set(['1.1.1.1', '2.2.2.2']),
-        }
+        answer = ['ip', 'ip', 'another.ip']
 
-        self.assertEqual(self.resolver.resolve(d), r)
+        self.resolver._backend.query = Mock(side_effect=lambda d, q: answer)
+        self.assertEqual(self.resolver.resolve(d), dict([(i, set(answer)) for i in d]))
+
+    def test_resolve_tries_and_nameservers(self):
+        d = ['ya.ru', 'fillo.me']
+
+        self.resolver.tries = 42
+        self.resolver.nameservers = ['one.ns', 'two.ns', 'three.ns']
+
+        result = defaultdict(lambda: defaultdict(int))
+        def query(domain, qname):
+            ns = self.resolver._backend.nameservers[0]
+            result[domain][ns] += 1
+            return []
+
+        self.resolver._backend.query = Mock(side_effect=query)
+
+        for i in self.resolver.resolve(d).keys():
+            self.assertEqual(result[i], dict([(i, self.resolver.tries) for i in self.resolver.nameservers]))
 
     def test_resolve_www(self):
-        self.resolver._run_queries = lambda d: [(i[0], i[1], ['1.1.1.1', '2.2.2.2', '1.1.1.1']) for i in d]
+        answer = ['ip', 'ip', 'another.ip']
+        self.resolver._backend.query = Mock(side_effect=lambda d, q: answer)
+
         self.resolver.www = True
 
         d = ['ya.ru', 'fillo.me', 'www.ru', 'www.example.com', 'www.www.com',]
         r = {
-            'ya.ru' : set(['1.1.1.1', '2.2.2.2']),
-            'fillo.me' : set(['1.1.1.1', '2.2.2.2']),
-            'example.com' : set(['1.1.1.1', '2.2.2.2']),
-            'www.ru' : set(['1.1.1.1', '2.2.2.2']),
-            'www.com' : set(['1.1.1.1', '2.2.2.2']),
-            'www.ya.ru' : set(['1.1.1.1', '2.2.2.2']),
-            'www.fillo.me' : set(['1.1.1.1', '2.2.2.2']),
-            'www.www.ru' : set(['1.1.1.1', '2.2.2.2']),
-            'www.www.com' : set(['1.1.1.1', '2.2.2.2']),
-            'www.example.com' : set(['1.1.1.1', '2.2.2.2']),
+            'ya.ru' : set(answer),
+            'fillo.me' : set(answer),
+            'example.com' : set(answer),
+            'www.ru' : set(answer),
+            'www.com' : set(answer),
+            'www.ya.ru' : set(answer),
+            'www.fillo.me' : set(answer),
+            'www.www.ru' : set(answer),
+            'www.www.com' : set(answer),
+            'www.example.com' : set(answer),
         }
 
         self.assertEqual(self.resolver.resolve(d), r)
 
     def test_resolve_www_combine(self):
-        self.resolver._run_queries = lambda d: [(i[0], i[1], ['1.1.1.1', '2.2.2.2', '1.1.1.1']) for i in d]
+        answer = ['ip', 'ip', 'another.ip']
+        answer_custom = ['test.ip']
+
+        def query(domain, qname):
+            if domain == 'www.fillo.me':
+                return answer_custom
+            else:
+                return answer
+
+        self.resolver._backend.query = Mock(side_effect=query)
+
         self.resolver.www_combine = True
 
-        d = ['ya.ru', 'fillo.me', 'www.ru', 'www.example.com', 'www.www.com',]
+        d = ['ya.ru', 'fillo.me', 'www.ru', 'www.example.com', 'www.www.com', 'www.fillo.me',]
         r = {
-            'ya.ru' : set(['1.1.1.1', '2.2.2.2']),
-            'fillo.me' : set(['1.1.1.1', '2.2.2.2']),
-            'example.com' : set(['1.1.1.1', '2.2.2.2']),
-            'www.ru' : set(['1.1.1.1', '2.2.2.2']),
-            'www.com' : set(['1.1.1.1', '2.2.2.2']),
+            'ya.ru' : set(answer),
+            'fillo.me' : set(answer+answer_custom),
+            'example.com' : set(answer),
+            'www.ru' : set(answer),
+            'www.com' : set(answer),
         }
 
         self.assertEqual(self.resolver.resolve(d), r)
-
-    def test_resolve_www_and_www_combine(self):
-        def run_queries(domains):
-            result = []
-            for d, ns in domains:
-                if d == 'www.fillo.me':
-                    result.append((d, ns, ['5.5.5.5']))
-                else:
-                    result.append((d, ns, ['1.1.1.1', '2.2.2.2']))
-            return result
-
-        self.resolver._run_queries = run_queries
-        self.resolver.www = self.resolver.www_combine = True
-
-        d = ['ya.ru', 'fillo.me']
-        r = {
-            'ya.ru' : set(['1.1.1.1', '2.2.2.2']),
-            'fillo.me' : set(['1.1.1.1', '2.2.2.2', '5.5.5.5']),
-        }
-
-        self.assertEqual(self.resolver.resolve(d), r)
-
-    def test_resolve_tries_and_nameservers(self):
-        result = defaultdict(lambda: defaultdict(int))
-
-        def run_queries(domains):
-            for d, ns in domains:
-                result[d][ns] += 1
-            return []
-
-        self.resolver._run_queries = run_queries
-        self.resolver.tries = 10
-        self.resolver.nameservers = ['one.ns', 'two.ns']
-
-        d = ['ya.ru', 'fillo.me']
-        r_ns = {'one.ns': 10, 'two.ns': 10}
-        r = {
-            'ya.ru' : r_ns,
-            'fillo.me' : r_ns,
-        }
-
-        self.assertEqual(self.resolver.resolve(d), {})
-        self.assertEqual(result, r)
 
     def test_resolve_verbose(self):
-        def run_queries(domains):
-            result = []
-            for d, ns in domains:
-                if d == 'test.exception':
-                    if ns == 'test.ns':
-                        result.append((d, ns, Exception('berserker:)')))
-                    else:
-                        result.append((d, ns, Exception('test')))
-                else:
-                    result.append((d, ns, [1,2,3,3,3,3,2,2]))
-            return result
+        d = ['ya.ru', 'fillo.me', 'except.com']
+        answer = ['ip', 'ip', 'another.ip', 'bad.ns']
 
-        self.resolver._run_queries = run_queries
+        def query(domain, qname):
+            if domain == 'except.com' and \
+               self.resolver._backend.nameservers[0] == 'bad.ns':
+                raise dns.exception.DNSException('test')
+            else:
+                return []
+
+        self.resolver._backend.query = Mock(side_effect=query)
         self.resolver.verbose = True
-        self.resolver.nameservers.append('test.ns')
+        self.resolver.nameservers = answer
 
-        d = ['fillo.me', 'test.exception']
-        r_success = {
-            'fillo.me' : set([1,2,3])
-        }
-        r_error = {
-            'test.exception': {
-                '77.88.8.1': Exception('test'),
-                '77.88.8.8': Exception('test'),
-                '8.8.4.4': Exception('test'),
-                '8.8.8.8': Exception('test'),
-                'test.ns': Exception('berserker:)'),
-            }
-        }
+        result = self.resolver.resolve(d)
 
-        resolved = self.resolver.resolve(d)
-        self.assertEqual(resolved['success'], r_success)
-
-        for ns, e in resolved['error']['test.exception'].items():
-            self.assertEqual(str(r_error['test.exception'][ns]), str(e))
+        self.assertTrue('except.com' in result['success'])
+        self.assertEqual(str(result['error']['except.com']['bad.ns']), 'test')
 
 
-class ResolverTestCase(unittest.TestCase):
+class ResolverTestCase(BaseResolverTestCase):
 
     def setUp(self):
         self.resolver = Resolver()
 
     def test_defaults(self):
         self.assertEqual(self.resolver.threads, 16)
-
-    def test_resolver(self):
-        self.resolver.query = Mock(side_effect=lambda d, ns: (d, ns, [d+'.answer', 1, 1]))
-        r = {
-            'ya.ru': set(['ya.ru.answer', 1]),
-            'fillo.me': set(['fillo.me.answer', 1])
-        }
-        self.assertEqual(self.resolver.resolve(['ya.ru', 'fillo.me']), r)
+        super(ResolverTestCase, self).test_defaults()
 
 
 if __name__ == '__main__':

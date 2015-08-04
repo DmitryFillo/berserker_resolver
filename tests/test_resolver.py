@@ -130,15 +130,20 @@ class BaseResolverTestCase(unittest.TestCase):
         self.assertEqual(str(result['error']['except.com']['bad.ns']), 'test')
 
 
-class ResolverTestCase(BaseResolverTestCase):
+class ResolverTestCase(unittest.TestCase):
 
     def setUp(self):
         self.resolver = Resolver()
 
     def test_defaults(self):
         self.assertEqual(self.resolver.threads, 16)
-        super(ResolverTestCase, self).test_defaults()
 
+    def test_resolve(self):
+        d = ['ya.ru', 'fillo.me']
+        answer = ['ip', 'ip', 'another.ip']
+
+        self.resolver._backend.query = Mock(side_effect=lambda d, q: answer)
+        self.assertEqual(self.resolver.resolve(d), dict([(i, set(answer)) for i in d]))
 
 if __name__ == '__main__':
     unittest.main()

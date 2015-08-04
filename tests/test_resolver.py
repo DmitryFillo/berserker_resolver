@@ -60,7 +60,7 @@ class BaseResolverTestCase(unittest.TestCase):
         self.resolver._backend.query = Mock(side_effect=query)
 
         for i in self.resolver.resolve(d).keys():
-            self.assertEqual(result[i], dict([(i, self.resolver.tries) for i in self.resolver.nameservers]))
+            self.assertEqual(dict(result[i]), dict([(i, self.resolver.tries) for i in self.resolver.nameservers]))
 
     def test_resolve_www(self):
         answer = ['ip', 'ip', 'another.ip']

@@ -156,7 +156,7 @@ Let's try www.youtube.com.
     ;; MSG SIZE  rcvd: 83
 
 This outputs may be outdated soon, but it is only necessary to show the behavior of DNS. Any website can use
-load balancing and you not able to do full resolving simply.
+load balancer and so you are not able to do full resolve these sites.
 
 The solution is query many nameservers many times for each domain. Yes, it's a bit clumsy, but works well enough
 in many cases. The resolving should be performed in multiple threads, because resolving in one thread is slow,
@@ -187,7 +187,7 @@ Supported versions
 Installation
 ============
 
-Install using pip::
+The best way::
 
     pip install berserker_resolver
 
@@ -217,7 +217,7 @@ Properties can be assign via constructor or directly to the object.
 Resolver.resolve
 ----------------
 
-Resolve method. It takes list of domains and returns dictionary with results.
+Resolve method. It takes list of domains and returns dictionary with results (dictionary of sets).
 
 .. code:: python
 
@@ -290,7 +290,7 @@ Resolver.timeout
 The total number of seconds to spend trying to get an answer to the query.
 
 Note that low timeout combined with high values of ``Resolver.tries`` and ``Resolver.threads`` can lead to
-numerous timeout errors when nameserver does not have time to return a response.
+numerous timeout errors when nameserver does not have enough time to return a response.
 
 Default is ``1``.
 
@@ -317,7 +317,7 @@ Default is ``A``.
 Resolver.www
 ------------
 
-This property enables automatic addition/removal of *www* prefix depending on the domain.
+Enables automatic addition/removal of *www* prefix depending on the domain.
 
 .. code:: python
 
@@ -351,7 +351,7 @@ Default is ``False``.
 Resolver.www_combine
 --------------------
 
-This property enables automatic combining *www* prefix domains with theirs non-*www* versions.
+Enables automatic combining *www* prefixed domains with theirs non-*www* versions.
 
 .. code:: python
 
@@ -423,16 +423,10 @@ Resolver.verbose
 ----------------
 
 This property enables error reporting, e.g. nxdomain, noanswer, etc. ``Resolver.resolve`` normally returns
-dictionary with resolved domains, but with this option it returns dictionary with two keys:
+dictionary of sets with resolved domains, but with this option it returns dictionary with two keys:
 
 + success
 + error
-
-``result['success']`` is dictionary with successfully resolved domains, as if without ``Resolver.verbose``.
-``result['error']`` is dictionary with unsuccessfully resolved domains where each key contains another dictionary
-with per nameserver exception. Exceptions comes from dnspython backend as ``dns.exception.DNSException`` subclasses.
-Check out `dnspython docs <http://www.dnspython.org/docs/1.12.0/dns.exception.DNSException-class.html>`_ for more
-information about built-in exceptions.
 
 .. code:: python
 
@@ -461,6 +455,12 @@ information about built-in exceptions.
             }
         }
     '''
+
+``result['success']`` is dictionary with successfully resolved domains, as if without ``Resolver.verbose``.
+``result['error']`` is dictionary with unsuccessfully resolved domains where each key contains another dictionary
+with per nameserver exception. Exceptions comes from dnspython backend as ``dns.exception.DNSException`` subclasses.
+Check out `dnspython docs <http://www.dnspython.org/docs/1.12.0/dns.exception.DNSException-class.html>`_ for more
+information about built-in exceptions.
 
 *Note that particular domain can be placed in both dictionaries, because some nameservers can return answer and some not.*
 

@@ -11,10 +11,10 @@ class BaseResolver(object):
     _regexp_www_combine = re.compile(r'(?:www\.)?(.+\..+)', re.I)
 
     def __init__(self, *args, **kwargs):
-        self.tries = kwargs.get('tries', 1)
-        self.timeout = kwargs.get('timeout', 1)
+        self.tries = kwargs.get('tries', 48)
+        self.timeout = kwargs.get('timeout', 3)
         self.qname = kwargs.get('qname', 'A')
-        self.nameservers = kwargs.get('nameservers', ['8.8.8.8', '8.8.4.4', '77.88.8.8', '77.88.8.1',])
+        self.nameservers = kwargs.get('nameservers', ['8.8.8.8', '8.8.4.4', '77.88.8.8', '77.88.8.1', '84.200.69.80', '84.200.70.40',])
         self.verbose = kwargs.get('verbose', False)
         self.www = kwargs.get('www', False)
         self.www_combine = kwargs.get('www_combine', False)
@@ -79,7 +79,7 @@ class BaseResolver(object):
 class Resolver(BaseResolver):
     def __init__(self, *args, **kwargs):
         super(Resolver, self).__init__(*args, **kwargs)
-        self.threads = kwargs.get('threads', 16)
+        self.threads = kwargs.get('threads', 512)
         self._lock = threading.Lock()
 
     @locked_iterator

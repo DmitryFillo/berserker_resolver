@@ -10,11 +10,11 @@ class BaseResolverTestCase(unittest.TestCase):
         self.resolver = BaseResolver()
 
     def test_defaults(self):
-        self.assertEqual(self.resolver.tries, 1)
-        self.assertEqual(self.resolver.timeout, 1)
+        self.assertEqual(self.resolver.tries, 48)
+        self.assertEqual(self.resolver.timeout, 3)
         self.assertEqual(self.resolver._backend.lifetime, self.resolver.timeout)
         self.assertEqual(self.resolver.qname, 'A')
-        self.assertEqual(self.resolver.nameservers, ['8.8.8.8', '8.8.4.4', '77.88.8.8', '77.88.8.1',])
+        self.assertEqual(self.resolver.nameservers, ['8.8.8.8', '8.8.4.4', '77.88.8.8', '77.88.8.1', '84.200.69.80', '84.200.70.40',])
         self.assertFalse(self.resolver.verbose)
         self.assertFalse(self.resolver.www)
         self.assertFalse(self.resolver.www_combine)
@@ -117,7 +117,7 @@ class ResolverTestCase(unittest.TestCase):
         self.resolver = Resolver()
 
     def test_defaults(self):
-        self.assertEqual(self.resolver.threads, 16)
+        self.assertEqual(self.resolver.threads, 512)
 
     def test_resolve(self):
         domains = ['ya.ru', 'fillo.me']

@@ -272,7 +272,9 @@ List of nameservers for resolving, each of them will be queried for particular d
 The larger the list, the more chances to get all IP addresses, but it increases
 time  needed for resolving.
 
-Default is ``['8.8.8.8', '8.8.4.4', '77.88.8.8', '77.88.8.1']``.
+Default is ``['8.8.8.8', '8.8.4.4', '77.88.8.8', '77.88.8.1', '84.200.69.80', '84.200.70.40']``. There are
+`Google Public DNS <https://developers.google.com/speed/public-dns/>`_, `Yandex.DNS <https://dns.yandex.ru/>`_
+and `DNS.WATCH <https://dns.watch/>`_.
 
 Resolver.tries
 --------------
@@ -282,7 +284,7 @@ Number of queries for each nameserver.
 If the number of times increases, the resolving accuracy increases too, but it also
 increases time to resolving.
 
-Default is ``1``.
+Default is ``48``.
 
 Resolver.timeout
 ----------------
@@ -292,7 +294,7 @@ The total number of seconds to spend trying to get an answer to the query.
 Note that low timeout combined with high values of ``Resolver.tries`` and ``Resolver.threads`` can lead to
 numerous timeout errors when nameserver does not have enough time to return a response.
 
-Default is ``1``.
+Default is ``3``.
 
 Resolver.threads
 ----------------
@@ -305,7 +307,7 @@ flood the DNS server. If you want to use crazy large amount of threads, check
 `stackoverflow thread <https://stackoverflow.com/questions/344203/maximum-number-of-threads-per-process-in-linux>`_ and
 increase ``Resolver.timeout``.
 
-Default is ``16``.
+Default is ``512``.
 
 Resolver.qname
 --------------

@@ -12,7 +12,7 @@ def dep_dnspython():
 
 setup(
     name='berserker_resolver',
-    version='2.0.0',
+    version='2.0.1',
     author='Dmitry Fillo',
     author_email='fillo@fillo.me',
     maintainer_email='fillo@fillo.me',

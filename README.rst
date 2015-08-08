@@ -2,10 +2,10 @@
 Berserker Resolver
 ==================
 
-.. image:: https://travis-ci.org/DmitryFillo/berserker_resolver.svg?branch=dev
+.. image:: https://travis-ci.org/DmitryFillo/berserker_resolver.svg?branch=master
      :target: https://travis-ci.org/DmitryFillo/berserker_resolver
-.. image:: https://coveralls.io/repos/DmitryFillo/berserker_resolver/badge.svg?branch=dev&service=github
-     :target: https://coveralls.io/github/DmitryFillo/berserker_resolver?branch=dev
+.. image:: https://coveralls.io/repos/DmitryFillo/berserker_resolver/badge.svg?branch=master&service=github
+     :target: https://coveralls.io/github/DmitryFillo/berserker_resolver?branch=master
 
 Fast mass dns resolver which can bypass loadbalancers.
 

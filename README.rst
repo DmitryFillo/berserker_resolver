@@ -23,21 +23,21 @@ that this information can be cached by other DNS servers and can be distorted. G
 you want to resolve many domains with sufficient accuracy which useful for blocking network purposes, e.g. websites filtering,
 parental controls, etc.
 
-Let's try to make a couple probes for www.twitter.com via Google Public DNS.
+Let's try to make a couple probes for www.twitter.com.
 
 .. code:: bash
 
     ; <<>> DiG 9.10.2-P1 <<>> @8.8.8.8 www.twitter.com +nocomments +noquestion
     ; (1 server found)
     ;; global options: +cmd
-    www.twitter.com.	582	IN	CNAME	twitter.com.
-    twitter.com.		13	IN	A	199.16.156.230
-    twitter.com.		13	IN	A	199.16.156.198
-    twitter.com.		13	IN	A	199.16.156.70
-    twitter.com.		13	IN	A	199.16.156.38
+    www.twitter.com.	593	IN	CNAME	twitter.com.
+    twitter.com.		23	IN	A	199.16.156.70
+    twitter.com.		23	IN	A	199.16.156.198
+    twitter.com.		23	IN	A	199.16.156.102
+    twitter.com.		23	IN	A	199.16.156.6
     ;; Query time: 5 msec
     ;; SERVER: 8.8.8.8#53(8.8.8.8)
-    ;; WHEN: Sat Aug 01 22:59:41 MSK 2015
+    ;; WHEN: Sat Aug 08 04:01:43 MSK 2015
     ;; MSG SIZE  rcvd: 122
 
 .. code:: bash
@@ -45,53 +45,32 @@ Let's try to make a couple probes for www.twitter.com via Google Public DNS.
     ; <<>> DiG 9.10.2-P1 <<>> @8.8.8.8 www.twitter.com +nocomments +noquestion
     ; (1 server found)
     ;; global options: +cmd
-    www.twitter.com.	592	IN	CNAME	twitter.com.
-    twitter.com.		22	IN	A	199.16.156.198
-    twitter.com.		22	IN	A	199.16.156.70
-    twitter.com.		22	IN	A	199.16.156.6
-    twitter.com.		22	IN	A	199.16.156.38
-    ;; Query time: 5 msec
+    www.twitter.com.	596	IN	CNAME	twitter.com.
+    twitter.com.		26	IN	A	199.16.156.230
+    twitter.com.		26	IN	A	199.16.156.70
+    twitter.com.		26	IN	A	199.16.156.198
+    twitter.com.		26	IN	A	199.16.156.102
+    ;; Query time: 4 msec
     ;; SERVER: 8.8.8.8#53(8.8.8.8)
-    ;; WHEN: Sat Aug 01 22:59:45 MSK 2015
+    ;; WHEN: Sat Aug 08 04:01:44 MSK 2015
     ;; MSG SIZE  rcvd: 122
 
-You see different RR sets with small TTL. What about another public DNS, e.g. 4.2.2.1 by Level 3 Communications?
+You see different RR sets with small TTL. What about another public DNS?
 
 .. code:: bash
 
-    ; <<>> DiG 9.10.2-P1 <<>> @4.2.2.1 www.twitter.com +nocomments +noquestion
+    ; <<>> DiG 9.10.2-P1 <<>> @77.88.8.8 www.twitter.com +nocomments +noquestion
     ; (1 server found)
     ;; global options: +cmd
-    www.twitter.com.	153	IN	CNAME	twitter.com.
-    twitter.com.		218	IN	A	199.16.156.38
-    twitter.com.		218	IN	A	199.59.148.10
-    twitter.com.		218	IN	A	199.59.150.39
-    twitter.com.		218	IN	A	199.16.156.102
-    twitter.com.		218	IN	A	199.16.156.6
-    twitter.com.		218	IN	A	199.59.150.7
-    twitter.com.		218	IN	A	199.59.148.82
-    twitter.com.		218	IN	A	199.59.149.198
-    twitter.com.		218	IN	A	199.16.156.198
-    twitter.com.		218	IN	A	199.16.156.230
-    twitter.com.		218	IN	A	199.59.149.230
-    twitter.com.		218	IN	A	199.16.156.70
-    ;; Query time: 41 msec
-    ;; SERVER: 4.2.2.1#53(4.2.2.1)
-    ;; WHEN: Sat Aug 01 22:58:57 MSK 2015
-    ;; MSG SIZE  rcvd: 250
-
-.. code:: bash
-
-    ; <<>> DiG 9.10.2-P1 <<>> @4.2.2.1 www.twitter.com +nocomments +noquestion
-    ; (1 server found)
-    ;; global options: +cmd
-    www.twitter.com.	390	IN	CNAME	twitter.com.
-    twitter.com.		28	IN	A	185.45.5.43
-    twitter.com.		28	IN	A	185.45.5.32
-    ;; Query time: 43 msec
-    ;; SERVER: 4.2.2.1#53(4.2.2.1)
-    ;; WHEN: Sat Aug 01 22:58:58 MSK 2015
-    ;; MSG SIZE  rcvd: 79
+    www.twitter.com.	30	IN	CNAME	twitter.com.
+    twitter.com.		30	IN	A	199.16.156.102
+    twitter.com.		30	IN	A	199.16.156.6
+    twitter.com.		30	IN	A	199.16.156.38
+    twitter.com.		30	IN	A	199.16.156.230
+    ;; Query time: 2 msec
+    ;; SERVER: 77.88.8.8#53(77.88.8.8)
+    ;; WHEN: Sat Aug 08 04:04:05 MSK 2015
+    ;; MSG SIZE  rcvd: 111
 
 Let's try www.youtube.com.
 
@@ -100,12 +79,12 @@ Let's try www.youtube.com.
     ; <<>> DiG 9.10.2-P1 <<>> @8.8.8.8 www.youtube.com +nocomments +noquestion
     ; (1 server found)
     ;; global options: +cmd
-    www.youtube.com.	21584	IN	CNAME	youtube-ui.l.google.com.
-    youtube-ui.l.google.com. 284	IN	CNAME	wide-youtube.l.google.com.
-    wide-youtube.l.google.com. 284	IN	A	64.233.165.198
-    ;; Query time: 4 msec
+    www.youtube.com.	21313	IN	CNAME	youtube-ui.l.google.com.
+    youtube-ui.l.google.com. 13	IN	CNAME	wide-youtube.l.google.com.
+    wide-youtube.l.google.com. 13	IN	A	74.125.143.198
+    ;; Query time: 5 msec
     ;; SERVER: 8.8.8.8#53(8.8.8.8)
-    ;; WHEN: Sat Aug 01 22:49:32 MSK 2015
+    ;; WHEN: Sat Aug 08 04:06:08 MSK 2015
     ;; MSG SIZE  rcvd: 121
 
 .. code:: bash
@@ -113,47 +92,25 @@ Let's try www.youtube.com.
     ; <<>> DiG 9.10.2-P1 <<>> @8.8.8.8 www.youtube.com +nocomments +noquestion
     ; (1 server found)
     ;; global options: +cmd
-    www.youtube.com.	21479	IN	CNAME	youtube-ui.l.google.com.
-    youtube-ui.l.google.com. 179	IN	CNAME	wide-youtube.l.google.com.
-    wide-youtube.l.google.com. 179	IN	A	173.194.71.198
-    ;; Query time: 5 msec
+    www.youtube.com.	21599	IN	CNAME	youtube-ui.l.google.com.
+    youtube-ui.l.google.com. 299	IN	CNAME	wide-youtube.l.google.com.
+    wide-youtube.l.google.com. 299	IN	A	173.194.71.198
+    ;; Query time: 6 msec
     ;; SERVER: 8.8.8.8#53(8.8.8.8)
-    ;; WHEN: Sat Aug 01 22:49:35 MSK 2015
+    ;; WHEN: Sat Aug 08 04:06:11 MSK 2015
     ;; MSG SIZE  rcvd: 121
 
 .. code:: bash
 
-    ; <<>> DiG 9.10.2-P1 <<>> @4.2.2.1 www.youtube.com +nocomments +noquestion
+    ; <<>> DiG 9.10.2-P1 <<>> @84.200.70.40 www.youtube.com +nocomments +noquestion
     ; (1 server found)
     ;; global options: +cmd
-    www.youtube.com.	81953	IN	CNAME	youtube-ui.l.google.com.
-    youtube-ui.l.google.com. 299	IN	A	173.194.44.36
-    youtube-ui.l.google.com. 299	IN	A	173.194.44.40
-    youtube-ui.l.google.com. 299	IN	A	173.194.44.35
-    youtube-ui.l.google.com. 299	IN	A	173.194.44.33
-    youtube-ui.l.google.com. 299	IN	A	173.194.44.46
-    youtube-ui.l.google.com. 299	IN	A	173.194.44.32
-    youtube-ui.l.google.com. 299	IN	A	173.194.44.37
-    youtube-ui.l.google.com. 299	IN	A	173.194.44.34
-    youtube-ui.l.google.com. 299	IN	A	173.194.44.41
-    youtube-ui.l.google.com. 299	IN	A	173.194.44.39
-    youtube-ui.l.google.com. 299	IN	A	173.194.44.38
+    www.youtube.com.	55513	IN	CNAME	youtube-ui.l.google.com.
+    youtube-ui.l.google.com. 271	IN	A	216.58.209.46
     ;; Query time: 41 msec
-    ;; SERVER: 4.2.2.1#53(4.2.2.1)
-    ;; WHEN: Sat Aug 01 22:53:00 MSK 2015
-    ;; MSG SIZE  rcvd: 254
-
-.. code:: bash
-
-    ; <<>> DiG 9.10.2-P1 <<>> @4.2.2.1 www.youtube.com +nocomments +noquestion
-    ; (1 server found)
-    ;; global options: +cmd
-    www.youtube.com.	71178	IN	CNAME	youtube-ui.l.google.com.
-    youtube-ui.l.google.com. 237	IN	A	216.58.209.206
-    ;; Query time: 43 msec
-    ;; SERVER: 4.2.2.1#53(4.2.2.1)
-    ;; WHEN: Sat Aug 01 22:53:00 MSK 2015
-    ;; MSG SIZE  rcvd: 83
+    ;; SERVER: 84.200.70.40#53(84.200.70.40)
+    ;; WHEN: Sat Aug 08 04:07:29 MSK 2015
+    ;; MSG SIZE  rcvd: 94
 
 This outputs may be outdated soon, but it is only necessary to show the behavior of DNS. Any website can use
 load balancer and so you are not able to do full resolve these sites.

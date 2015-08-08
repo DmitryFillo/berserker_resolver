@@ -11,14 +11,14 @@ def dep_dnspython():
     return name
 
 setup(
-    name = 'berserker_resolver',
-    version = '1.0.3',
-    author = 'Dmitry Fillo',
-    author_email = 'fillo@fillo.me',
-    description = ('Berserker Resolver is fast mass dns resolver which can bypass loadbalancers'),
-    license = 'BSD',
-    keywords = 'dns resolver berserker loadbalancer',
-    url = 'https://github.com/DmitryFillo/berserker_resolver',
+    name='berserker_resolver',
+    version='2.0.0',
+    author='Dmitry Fillo',
+    author_email='fillo@fillo.me',
+    description=('Fast mass dns resolver which can bypass loadbalancers'),
+    license='BSD',
+    keywords='dns resolver berserker loadbalancer',
+    url='https://github.com/DmitryFillo/berserker_resolver',
     packages=['berserker_resolver'],
     install_requires=[dep_dnspython()],
     tests_require=['mock'],
@@ -28,9 +28,14 @@ setup(
     long_description=read('README.rst'),
     classifiers=[
         'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
         'Topic :: Internet :: Name Service (DNS)',
         'Topic :: Utilities',
+        'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
     ],
 )

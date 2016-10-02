@@ -1,10 +1,6 @@
 import re
 import random
 import threading
-import dns.resolver
-import dns.exception
-from berserker_resolver.utils import locked_iterator
-
 
 class BaseResolver(object):
     _regexp_www = re.compile(r'(?:www\.){1}(.+\..+)', re.I)

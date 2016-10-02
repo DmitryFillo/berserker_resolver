@@ -56,6 +56,3 @@ target/
 
 # PyCharm
 .idea/
-
-# dev.py
-dev.py

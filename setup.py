@@ -22,9 +22,7 @@ setup(
     extras_require={
         ':python_version=="3.3"': ['asyncio'],
     },
-    tests_require=[
-        'coveralls'
-    ],
+    tests_require=[],
     test_suite='tests.suite',
     zip_safe=False,
     platforms='any',

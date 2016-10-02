@@ -6,7 +6,7 @@ python:
 before_install:
   - pip install -U setuptools pip wheel
 install:
-  - pip install .
+  - pip install coveralls
 script:
   - coverage run --source=berserker_resolver setup.py test
 after_success:

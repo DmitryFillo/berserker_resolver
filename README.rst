@@ -2,12 +2,13 @@
 Berserker Resolver
 ==================
 
-.. image:: https://travis-ci.org/DmitryFillo/berserker_resolver.svg
+.. image:: https://travis-ci.org/DmitryFillo/berserker_resolver.svg?branch=dev
    :target: https://travis-ci.org/DmitryFillo/berserker_resolver
-.. image:: https://coveralls.io/repos/DmitryFillo/berserker_resolver/badge.svg
-   :target: https://coveralls.io/github/DmitryFillo/berserker_resolver
-.. image:: https://landscape.io/github/DmitryFillo/berserker_resolver/master/landscape.svg?style=flat
-   :target: https://landscape.io/github/DmitryFillo/berserker_resolver/master
+.. image:: https://coveralls.io/repos/github/DmitryFillo/berserker_resolver/badge.svg?branch=dev
+   :target: https://coveralls.io/github/DmitryFillo/berserker_resolver?branch=dev
+.. image:: https://landscape.io/github/DmitryFillo/berserker_resolver/dev/landscape.svg?style=flat
+   :target: https://landscape.io/github/DmitryFillo/berserker_resolver/dev
+   :alt: Code Health
 
 Fast mass dns resolver which can bypass loadbalancers.
 

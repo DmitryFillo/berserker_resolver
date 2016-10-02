@@ -3,8 +3,10 @@ python:
   - 3.3
   - 3.4
   - 3.5
+before_install:
+  - pip install -U setuptools pip wheel
 install:
-  - pip install coveralls
+  - pip install .
 script:
   - coverage run --source=berserker_resolver setup.py test
 after_success:

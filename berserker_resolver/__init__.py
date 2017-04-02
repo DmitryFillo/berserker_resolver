@@ -1,3 +1,3 @@
-from berserker_resolver.resolver import Resolver
+from berserker_resolver.resolver import BerserkerResolver, BerserkerResult
 
-__all__ = ['Resolver',]
+__all__ = ['BerserkerResolver', 'BerserkerResult',]

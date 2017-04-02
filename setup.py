@@ -1,4 +1,4 @@
-import os, sys
+import os
 from setuptools import setup
 
 
@@ -11,17 +11,14 @@ setup(
     author='Dmitry Fillo',
     author_email='fillo@fillo.me',
     maintainer_email='fillo@fillo.me',
-    description=('Fast mass dns resolver which can bypass loadbalancers'),
-    keywords='dns resolver berserker loadbalancer',
+    description='Fast mass dns resolver which can bypass load balancers',
+    keywords='dns resolver berserker load balancers',
     license='BSD',
     url='https://github.com/DmitryFillo/berserker_resolver',
     packages=['berserker_resolver'],
     install_requires=[
-        'aiodns>=1.1.1,<2'
+        'aiodns=1.1.1'
     ],
-    extras_require={
-        ':python_version=="3.3"': ['asyncio'],
-    },
     tests_require=[],
     test_suite='tests.suite',
     zip_safe=False,
@@ -33,8 +30,7 @@ setup(
         'Topic :: Utilities',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 )

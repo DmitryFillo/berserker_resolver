@@ -6,76 +6,56 @@ import aiodns
 
 
 class BerserkerResult(object):
-    def __init__(self, domain, results=None, errors=None):
+    def __init__(self, domain, results=None):
         self._domain = domain
-        self._results = set()
-        self._errors = set()
 
         if results:
-            self._results.update(results)
-        if errors:
-            self._errors.update(errors)
+            self._results = set(results)
+        else:
+            self._results = set()
 
+    @property
     def domain(self):
         return self._domain
 
+    @property
     def results(self):
         return self._results
 
-    def errors(self):
-        return self._errors
+    def results_merged_by_prop(self, prop):
+        r = set()
+        for i in self._results:
+            r.add(getattr(i, prop))
+        return r
 
     def __str__(self):
         return self._domain
 
     def __add__(self, other):
-        if other.domain() != self._domain:
-            raise TypeError('You can add BerserkerResult with another only if domain is equal.')
-
-        if self._results:
-            results = set(self._results)
-        else:
-            results = set()
-
-        if self._errors:
-            errors = set(self._errors)
-        else:
-            errors = set()
-
-        other_results = other.results()
-        other_errors = other.errors()
-
-        if other_results:
-            results.update(other_results)
-        if other_errors:
-            errors.update(other_errors)
-
-        return BerserkerResult(domain=self._domain, results=results, errors=errors)
+        if other.domain != self._domain:
+            raise TypeError('You can add BerserkerResult to another only if domains are equal.')
+        return BerserkerResult(domain=self._domain, results=self._results.union(other.results))
 
 
 class BerserkerResolver(object):
     _regexp_www = re.compile(r'^www\.{1}(.+)$', re.I)
-    # _regexp_www_combine = re.compile(r'(?:www\.)?(.+\..+)', re.I)
 
     def __init__(self, **kwargs):
         self.tries = kwargs.get('tries', 1)
-
         self.qname = kwargs.get('qname', 'A')
 
         # TODO: check nameservers availability
         self.nameservers = kwargs.get('nameservers', [
             '8.8.8.8',
-            #'8.8.4.4',
-            #'77.88.8.8',
-            #'77.88.8.1',
-            #'84.200.69.80',
-            #'84.200.70.40',
+            # '8.8.4.4',
+            # '77.88.8.8',
+            # '77.88.8.1',
+            # '84.200.69.80',
+            # '84.200.70.40',
         ])
 
         self.www = kwargs.get('www', False)
-
         self.chunk_size = kwargs.get('chunk_size', 1024)
-
         self._loop = kwargs.get('loop', asyncio.get_event_loop())
 
     async def resolve(self, domains):
@@ -86,8 +66,7 @@ class BerserkerResolver(object):
             for domain, ns, i in c:
                 futures.append(self._query(domain, ns, i))
             for (d, r) in await asyncio.gather(*futures):
-                result = results.setdefault(d, None)
-                if result:
+                if results.setdefault(d, None):
                     results[d] += r
                 else:
                     results[d] = r
@@ -103,8 +82,9 @@ class BerserkerResolver(object):
         try:
             results = await resolver.query(i, self.qname)
             result = BerserkerResult(domain=d, results=results)
-        except aiodns.error.DNSError as e:
-            result = BerserkerResult(domain=d, errors=[e])
+        except aiodns.error.DNSError:
+            # Mute DNSErrors
+            result = BerserkerResult(domain=d)
         return d, result
 
     def _get_resolver(self):
@@ -118,24 +98,22 @@ class BerserkerResolver(object):
             yield chunk
 
     def _bind(self, domains):
-        if self.www:
-            for d in domains:
-                for i in self._bind_with_www(d):
-                    for ns in self._bind_with_nameservers_and_tries():
-                        yield d, ns, i
-        else:
-            for d in domains:
+        for d in domains:
+            for i in self._bind_with_www(d):
                 for ns in self._bind_with_nameservers_and_tries():
-                    yield d, ns, d
+                    yield d, ns, i
 
     def _bind_with_nameservers_and_tries(self):
         return (ns for ns in self.nameservers for _ in range(self.tries))
 
     def _bind_with_www(self, d):
-        www = self._regexp_www.match(d)
-        if www:
-            for i in (d, www.group(1),):
-                yield i
+        if self.www:
+            www = self._regexp_www.match(d)
+            if www:
+                for i in (d, www.group(1),):
+                    yield i
+            else:
+                for i in (d, 'www.' + d,):
+                    yield i
         else:
-            for i in (d, 'www.' + d,):
-                yield i
+            yield d

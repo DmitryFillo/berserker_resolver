@@ -17,7 +17,7 @@ setup(
     url='https://github.com/DmitryFillo/berserker_resolver',
     packages=['berserker_resolver'],
     install_requires=[
-        'aiodns=1.1.1'
+        'aiodns==1.1.1',
     ],
     tests_require=[],
     test_suite='tests.suite',

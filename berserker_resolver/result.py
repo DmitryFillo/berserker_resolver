@@ -1,4 +1,6 @@
 class BerserkerResult(object):
+    _cache = dict()
+
     def __init__(self, domain, result=None):
         self._domain = domain
         if result:
@@ -14,12 +16,6 @@ class BerserkerResult(object):
     def result(self):
         return self._result
 
-    def merge_by_field(self, prop):
-        r = set()
-        for i in self._result:
-            r.add(getattr(i, prop))
-        return r
-
     def __str__(self):
         return self._domain
 
@@ -27,3 +23,14 @@ class BerserkerResult(object):
         if other.domain != self._domain:
             raise TypeError('You can add BerserkerResult instance to another only if domains are equal.')
         return BerserkerResult(domain=self._domain, result=self._result.union(other.result))
+
+    def __getitem__(self, prop):
+        if prop in self._cache:
+            return self._cache[prop]
+
+        r = set()
+        for i in self._result:
+            if hasattr(i, prop):
+                r.add(getattr(i, prop))
+        self._cache[prop] = r
+        return r

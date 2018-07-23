@@ -11,7 +11,8 @@ from berserker_resolver import BerserkerResolver
 def main():
     r = BerserkerResolver()
     g = r.resolve_until_complete(domains or ['fillo.ru', 'ya.ru'])
-    print([(i.domain, i.merge_by_field('host'), i.merge_by_field('ttl')) for i in g.values()])
+    print([(i.domain, i['host'], i['ttl']) for i in g.values()])
+
 
 if __name__ == '__main__':
     main()

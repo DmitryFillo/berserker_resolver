@@ -10,9 +10,9 @@ Berserker Resolver
    :target: https://landscape.io/github/DmitryFillo/berserker_resolver/dev
    :alt: Code Health
 
-   TBD: update doc!
+TBD: update doc!
 
-   Fast mass dns resolver which can bypass loadbalancers.
+Fast mass dns resolver which can bypass loadbalancers.
 
 .. contents::
 
